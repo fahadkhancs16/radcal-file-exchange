@@ -55,7 +55,14 @@ class ExchangeWorkspace extends Component
         ];
     }
 
-    public function upload(FileService $files): void
+    /**
+     * Persist the pending uploads onto the exchange.
+     *
+     * NB: must not be named `upload()` / `uploadMultiple()` — Livewire's
+     * WithFileUploads trait reserves those for the temp-upload machinery, so
+     * a wire:click on them is silently swallowed.
+     */
+    public function saveUploads(FileService $files): void
     {
         $this->validate();
 

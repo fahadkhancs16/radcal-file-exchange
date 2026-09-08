@@ -25,10 +25,15 @@ and its customers. One deployable, one admin role, ephemeral customer sessions.
 cp .env.example .env && php artisan key:generate
 # start MariaDB in XAMPP, then:
 php artisan migrate:fresh --seed        # admin@radcal.com / password ; demo exchanges
-php artisan serve                       # or serve via XAMPP at /radcal-file-exchange/public
+php artisan serve                       # http://127.0.0.1:8000
 composer test                           # Pest
 composer check                          # Pint + Larastan + Pest
 ```
+
+`APP_URL` must match how you reach the app (`http://127.0.0.1:8000` for
+`artisan serve`) — Livewire builds its JS/upload endpoint URLs from it, so a
+mismatch silently breaks every `wire:click`, including file uploads. Serving
+under a XAMPP subdirectory means setting `APP_URL` to that full URL and using it.
 
 Local mail is written to `storage/logs/laravel.log` — read verification codes there.
 
@@ -64,6 +69,7 @@ never stored.
 - Enums in `app/Enums/`, backed by strings that match the DB values.
 - Services are constructor-injected; call them from controllers/Livewire, not from models.
 - New behaviour needs a Pest test. Feature tests use the real MySQL test DB (`radcal_share_test`).
+- Livewire actions must not be named `upload`/`uploadMultiple` (or other `WithFileUploads` names) — `wire:click` on them is swallowed. The upload action is `saveUploads()`.
 - Run `composer check` before considering work done.
 
 ## Not yet built (later milestones)

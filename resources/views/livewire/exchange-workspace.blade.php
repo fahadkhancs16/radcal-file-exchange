@@ -97,8 +97,8 @@
                     @endforeach
                 </ul>
                 <div class="actions" style="justify-content:center">
-                    <button type="button" class="btn" wire:click="upload"
-                            wire:loading.attr="disabled" wire:target="upload">Upload {{ count($uploads) }} file{{ count($uploads) === 1 ? '' : 's' }}</button>
+                    <button type="button" class="btn" wire:click="saveUploads"
+                            wire:loading.attr="disabled" wire:target="saveUploads">Upload {{ count($uploads) }} file{{ count($uploads) === 1 ? '' : 's' }}</button>
                     <button type="button" class="btn link" wire:click="$set('uploads', [])">Clear</button>
                 </div>
             @endif

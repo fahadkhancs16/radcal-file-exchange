@@ -24,7 +24,7 @@ it('blocks the workspace without a session', function () {
 it('lets a customer upload a file', function () {
     Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
         ->set('uploads', [UploadedFile::fake()->create('traces.zip', 100)])
-        ->call('upload')
+        ->call('saveUploads')
         ->assertHasNoErrors();
 
     expect($this->exchange->customerFiles()->count())->toBe(1);
@@ -33,7 +33,7 @@ it('lets a customer upload a file', function () {
 it('shows an error when an upload is too large', function () {
     Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
         ->set('uploads', [UploadedFile::fake()->create('huge.bin', 4096)])
-        ->call('upload')
+        ->call('saveUploads')
         ->assertHasErrors('uploads');
 
     expect($this->exchange->customerFiles()->count())->toBe(0);
