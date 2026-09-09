@@ -29,27 +29,29 @@ class AppServiceProvider extends ServiceProvider
 
     private function configureRateLimiters(): void
     {
-        // Sending a verification code: tight per-email, looser per-IP.
+        // Friendly per-email pacing (60s between codes, with a clear message) is
+        // handled in VerificationService. These HTTP limiters are only an
+        // abuse backstop, and are lifted outside production so local testing
+        // never hits a bare 429 page.
         RateLimiter::for('verification-send', function (Request $request) {
-            $email = (string) $request->input('email');
+            if (! $this->app->isProduction()) {
+                return Limit::none();
+            }
+
+            $email = mb_strtolower((string) $request->input('email'));
 
             return [
-                Limit::perHour(3)->by('email:'.mb_strtolower($email)),
-                Limit::perHour(12)->by('ip:'.$request->ip()),
+                Limit::perHour(8)->by('email:'.$email),
+                Limit::perHour(40)->by('ip:'.$request->ip()),
             ];
         });
 
-        // Entering a verification code.
-        RateLimiter::for('verification-confirm', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+        RateLimiter::for('verification-confirm', function (Request $request) {
+            if (! $this->app->isProduction()) {
+                return Limit::none();
+            }
 
-        // Trying an exchange password.
-        RateLimiter::for('exchange-access', function (Request $request) {
-            $code = (string) $request->route('code', $request->input('code'));
-
-            return [
-                Limit::perMinute(5)->by('code:'.mb_strtolower($code)),
-                Limit::perHour(30)->by('ip:'.$request->ip()),
-            ];
+            return Limit::perMinute(15)->by($request->ip());
         });
     }
 }
