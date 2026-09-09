@@ -11,6 +11,17 @@ and its customers. One deployable, one admin role, ephemeral customer sessions.
 - Pest 3 + Larastan (level 6) + Pint
 - Mail: `log` locally, Brevo in staging/production
 
+## Frontend
+
+Customer UI is a hand-written stylesheet at `public/css/radcal.css` (no build
+step) plus Inter from Google Fonts. Brand: iba green `#69BE28`, charcoal
+`#323031` — sampled from `public/images/logo-iba-radcal.png`. The workspace
+(`livewire/exchange-workspace.blade.php`) is a sidebar dashboard: the
+`$section` property switches Overview / Files from Radcal / Your uploaded
+files / Exchange details in place (no page reload). Public/auth pages use
+`components/layouts/app.blade.php`; the dashboard uses
+`components/layouts/exchange.blade.php`.
+
 ## Milestones
 
 | M | Phases | State |

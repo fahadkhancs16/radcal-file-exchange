@@ -1,8 +1,8 @@
 <x-layouts.app title="Access a file exchange">
     <h1>Access a file exchange</h1>
-    <p class="lede">Enter the exchange code and password Radcal gave you.</p>
+    <p class="sub">Enter the exchange code and password Radcal gave you.</p>
 
-    <div class="card">
+    <div class="panel">
         <form method="POST" action="{{ route('access.enter') }}">
             @csrf
             <div class="field">

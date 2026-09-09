@@ -6,6 +6,7 @@ use App\Enums\FileOwner;
 use App\Exceptions\FileUploadException;
 use App\Models\Exchange;
 use App\Services\FileService;
+use App\Support\ExchangeSession;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Response;
 use Livewire\Attributes\Layout;
@@ -15,10 +16,10 @@ use Livewire\WithFileUploads;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * The customer's view of one exchange (spec §4.2–4.3). Radcal's files are
- * read-only; the customer may add, replace (same filename) and delete their
- * own. ZIP "Download Selected" for Radcal files arrives in Milestone 2 —
- * for now each Radcal file downloads on its own.
+ * The customer's dashboard view of one exchange (spec §4.2–4.3). Radcal's
+ * files are read-only; the customer may add, replace (same filename) and
+ * delete their own. ZIP "Download Selected" for Radcal files arrives in
+ * Milestone 2 — for now each Radcal file downloads on its own.
  */
 #[Layout('components.layouts.exchange')]
 class ExchangeWorkspace extends Component
@@ -28,6 +29,9 @@ class ExchangeWorkspace extends Component
     public Exchange $exchange;
 
     public bool $firstVisit = false;
+
+    /** Which sidebar section is shown: overview | radcal | uploads | details. */
+    public string $section = 'overview';
 
     /** @var array<int, TemporaryUploadedFile> */
     public array $uploads = [];
@@ -42,6 +46,24 @@ class ExchangeWorkspace extends Component
             ?? Exchange::query()->where('code', $code)->firstOrFail();
 
         $this->firstVisit = (bool) session('exchange.first_visit', false);
+
+        if ($this->firstVisit) {
+            $this->section = 'uploads';
+        }
+    }
+
+    public function showSection(string $section): void
+    {
+        if (in_array($section, ['overview', 'radcal', 'uploads', 'details'], true)) {
+            $this->section = $section;
+            $this->reset('selected');
+        }
+    }
+
+    public function leave(ExchangeSession $session): void
+    {
+        $session->revoke();
+        $this->redirectRoute('home');
     }
 
     /** @return array<string, list<string>> */

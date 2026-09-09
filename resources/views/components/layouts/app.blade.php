@@ -1,4 +1,4 @@
-@props(['wide' => false, 'title' => null])
+@props(['title' => null, 'wide' => false])
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,19 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title>{{ $title ? $title.' — ' : '' }}Radcal File Exchange</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="{{ asset('css/radcal.css') }}">
     @livewireStyles
 </head>
 <body>
-<div class="site">
-    <header class="site-header">
-        <div class="inner">
-            <a href="{{ route('home') }}" class="wordmark">Radcal <span>File Exchange</span></a>
-            <span class="tag">Secure temporary transfer</span>
-        </div>
-    </header>
+<div class="auth">
+    <a href="{{ route('home') }}" class="auth-brand">
+        <img src="{{ asset('images/logo-iba-radcal.png') }}" alt="iba Radcal">
+    </a>
 
-    <main class="shell {{ $wide ? 'wide' : '' }}">
+    <div class="auth-inner {{ $wide ? 'lg' : '' }}">
         @if (session('status'))
             <div class="alert success">{{ session('status') }}</div>
         @endif
@@ -27,13 +27,11 @@
         @endif
 
         {{ $slot }}
-    </main>
+    </div>
 
-    <footer class="site-footer">
-        <div class="inner">
-            Files sent through this system are held temporarily and deleted automatically. Save anything you need to keep before its exchange expires.
-        </div>
-    </footer>
+    <p class="auth-foot">
+        Files sent through this system are held temporarily and removed automatically once their exchange expires.
+    </p>
 </div>
 @livewireScripts
 </body>

@@ -1,8 +1,8 @@
 <x-layouts.app title="Verify your email">
     <h1>Enter your code</h1>
-    <p class="lede">We emailed a 6-digit code to <strong>{{ $email }}</strong>. It is valid for {{ config('exchange.verification.ttl_minutes') }} minutes.</p>
+    <p class="sub">We emailed a 6-digit code to <strong>{{ $email }}</strong>. It is valid for {{ config('exchange.verification.ttl_minutes') }} minutes.</p>
 
-    <div class="card">
+    <div class="panel">
         <form method="POST" action="{{ route('send.verify.submit') }}">
             @csrf
             <div class="field">
@@ -12,12 +12,12 @@
                 @error('code') <p class="error-text">{{ $message }}</p> @enderror
             </div>
             <div class="actions">
-                <button type="submit" class="btn">Verify and continue</button>
+                <button type="submit" class="btn block">Verify and continue</button>
             </div>
         </form>
     </div>
 
-    <form method="POST" action="{{ route('send.verify.resend') }}" style="margin-top:1rem">
+    <form method="POST" action="{{ route('send.verify.resend') }}" style="margin-top:.8rem;text-align:center">
         @csrf
         <button type="submit" class="btn link">Didn't get it? Send a new code</button>
     </form>

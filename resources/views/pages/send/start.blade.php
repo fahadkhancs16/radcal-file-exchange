@@ -1,8 +1,8 @@
-<x-layouts.app title="Send files to Radcal">
+<x-layouts.app title="Send files to Radcal" :wide="true">
     <h1>Send files to Radcal</h1>
-    <p class="lede">Tell us who you are and what you are sending. We will email a 6-digit code to confirm your address before you upload.</p>
+    <p class="sub">Tell us who you are and what you are sending. We will email a 6-digit code to confirm your address before you upload.</p>
 
-    <div class="card">
+    <div class="panel">
         <form method="POST" action="{{ route('send.store') }}">
             @csrf
 
@@ -37,7 +37,7 @@
         </form>
     </div>
 
-    <p class="lede" style="margin-top:1.5rem;font-size:.88rem">
+    <p class="auth-foot" style="text-align:left;margin-left:0">
         Sending files here does not open a support request. After uploading, contact your Radcal representative directly.
     </p>
 </x-layouts.app>
