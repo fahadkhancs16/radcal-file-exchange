@@ -1,14 +1,13 @@
 <x-mail::message>
-# Verify your email
+You started sending files to Radcal through the Radcal File Exchange and asked us to confirm this email address.
 
-Enter this code on the Radcal File Exchange to continue:
+Enter this code on the page where you left off:
 
 <x-mail::panel>
-# {{ $code }}
+{{ $code }}
 </x-mail::panel>
 
-This code is valid for {{ $ttlMinutes }} minutes. If you did not request it, you can ignore this email.
+The code is valid for {{ $ttlMinutes }} minutes. If you did not start a file transfer with Radcal, no action is needed — nothing happens until the code is entered.
 
-Thanks,<br>
 Radcal File Exchange
 </x-mail::message>

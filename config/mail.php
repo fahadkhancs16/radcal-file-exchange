@@ -100,4 +100,20 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Global "Reply-To" Address
+    |--------------------------------------------------------------------------
+    |
+    | Transactional mail is sent from a no-reply address, but a customer who
+    | replies should reach a monitored Radcal mailbox. Leave blank to send no
+    | Reply-To header.
+    |
+    */
+
+    'reply_to' => [
+        'address' => env('MAIL_REPLY_TO_ADDRESS'),
+        'name' => env('MAIL_REPLY_TO_NAME', env('MAIL_FROM_NAME', 'Radcal')),
+    ],
+
 ];

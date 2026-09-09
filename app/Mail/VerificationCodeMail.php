@@ -3,12 +3,11 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class VerificationCodeMail extends Mailable
+class VerificationCodeMail extends RadcalMailable
 {
     use Queueable, SerializesModels;
 
@@ -20,7 +19,8 @@ class VerificationCodeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your Radcal File Exchange verification code',
+            subject: 'Radcal File Exchange verification code: '.$this->code,
+            replyTo: $this->configuredReplyTo(),
         );
     }
 
