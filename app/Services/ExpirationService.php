@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ActivityAction;
 use App\Models\Exchange;
 use Illuminate\Support\Carbon;
 
@@ -17,6 +18,8 @@ use Illuminate\Support\Carbon;
  */
 class ExpirationService
 {
+    public function __construct(private readonly ActivityRecorder $activity) {}
+
     public function lifetimeDays(): int
     {
         return (int) config('exchange.lifetime_days');
@@ -47,14 +50,28 @@ class ExpirationService
     /** An administrator sets an explicit expiration date. */
     public function setExplicit(Exchange $exchange, Carbon $when): void
     {
+        $previous = $exchange->expires_at;
         $exchange->forceFill(['expires_at' => $when])->save();
+
+        $this->activity->record($exchange, ActivityAction::ExpirationChanged, [
+            'from' => $previous->toDateTimeString(),
+            'to' => $when->toDateTimeString(),
+        ]);
     }
 
     /** Extend by a number of days from the later of now / current expiry. */
     public function extend(Exchange $exchange, int $days): void
     {
-        $base = $exchange->expires_at->isFuture() ? $exchange->expires_at : now();
+        $previous = $exchange->expires_at;
+        $base = $previous->isFuture() ? $previous : now();
+        $when = $base->copy()->addDays($days);
 
-        $exchange->forceFill(['expires_at' => $base->copy()->addDays($days)])->save();
+        $exchange->forceFill(['expires_at' => $when])->save();
+
+        $this->activity->record($exchange, ActivityAction::ExpirationChanged, [
+            'from' => $previous->toDateTimeString(),
+            'to' => $when->toDateTimeString(),
+            'extended_days' => $days,
+        ]);
     }
 }

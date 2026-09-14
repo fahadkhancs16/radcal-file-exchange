@@ -201,6 +201,32 @@ class Exchange extends Model
             ->where('expires_at', '<=', now());
     }
 
+    /** Active and within config('exchange.expiring_soon_days') of expiry. */
+    /** @param Builder<Exchange> $query */
+    public function scopeExpiringSoon(Builder $query): void
+    {
+        $query->active()->where('expires_at', '<=', now()->addDays((int) config('exchange.expiring_soon_days')));
+    }
+
+    /** Past expiry, but not disabled or purged — mirrors Exchange::status()'s precedence. */
+    /** @param Builder<Exchange> $query */
+    public function scopeExpired(Builder $query): void
+    {
+        $query->whereNull('disabled_at')->whereNull('purged_at')->where('expires_at', '<=', now());
+    }
+
+    /** @param Builder<Exchange> $query */
+    public function scopeDisabled(Builder $query): void
+    {
+        $query->whereNotNull('disabled_at')->whereNull('purged_at');
+    }
+
+    /** @param Builder<Exchange> $query */
+    public function scopePurged(Builder $query): void
+    {
+        $query->whereNotNull('purged_at');
+    }
+
     /** @param Builder<Exchange> $query */
     public function scopeSearch(Builder $query, ?string $term): void
     {

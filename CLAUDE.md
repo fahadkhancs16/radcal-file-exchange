@@ -7,9 +7,11 @@ and its customers. One deployable, one admin role, ephemeral customer sessions.
 ## Stack
 
 - Laravel 11, PHP 8.2 (XAMPP), MariaDB 10.4 (`radcal_share`)
-- Livewire 3 for the customer workspace; Filament 3 for `/admin` (Milestone 2)
+- Livewire 3 for the customer workspace; Filament 3 for `/admin`
 - Pest 3 + Larastan (level 6) + Pint
 - Mail: `log` locally, Brevo in staging/production
+- Requires the **`intl`** PHP extension (Filament's number/date formatting needs it) —
+  in XAMPP's `php.ini`, uncomment `extension=intl` and restart whatever's serving PHP.
 
 ## Frontend
 
@@ -27,7 +29,7 @@ files / Exchange details in place (no page reload). Public/auth pages use
 | M | Phases | State |
 |---|--------|-------|
 | **M1 — Foundation & customer-initiated transfer** | setup, data layer, domain services, Send Files to Radcal | **done** |
-| M2 — Exchange workspace, admin & email | Access Exchange (full), Filament admin, Brevo | not started |
+| **M2 — Exchange workspace, admin & email** | Access Exchange (full), Filament admin panel | **admin panel done**; Brevo domain auth + ZIP download still open |
 | M3 — Hardening & launch | purge job, resumable uploads, security, tests, deploy | not started |
 
 ## Run it
@@ -49,6 +51,35 @@ under a XAMPP subdirectory means setting `APP_URL` to that full URL and using it
 Local mail is written to `storage/logs/laravel.log` — read verification codes there.
 
 Seeded exchange for manual testing: code `ABC123`, password `demo-pass`.
+Admin login: `admin@radcal.com` / `password` at `/admin`. Create more admins with
+`php artisan app:make-admin`.
+
+## Admin panel
+
+Filament 3 at `/admin`, restricted to `User::is_admin` via `canAccessPanel()`
+(`app/Models/User.php`). There is deliberately **no generic Edit page** — the
+`ExchangeResource` view page (`app/Filament/Resources/ExchangeResource/Pages/ViewExchange.php`)
+is the whole "cockpit": every field an admin can change is its own explicit,
+confirmed header action, and every action calls the same `App\Services\*`
+classes the customer UI uses (never raw Eloquent), so activity logging, disk
+writes and the expiration clock all stay correct. File management for both
+sides of an exchange is two relation managers sharing
+`BaseExchangeFilesRelationManager`; uploads go through `FileService::store()`
+via `FileUpload::make('files')->storeFiles(false)` (so we get the raw
+`TemporaryUploadedFile`, not a Filament-managed stored path); downloads go
+through a signed-in-only controller registered inside the panel's own route
+group (`AdminPanelProvider::routes()`), not a public URL.
+
+Two Filament gotchas worth knowing before touching this code:
+- **Never name a header-action-builder method `{actionName}Action`** (e.g. a
+  method called `enableAction()` for an action named `enable`) — Filament's own
+  action auto-discovery collides with it and calls it through Livewire's public
+  method dispatch, which throws on private methods. The builder methods here
+  are prefixed `buildXAction()` to avoid this.
+- **`TextColumn::make('someJsonColumn')` auto-implodes an array-cast attribute
+  into a comma-joined string** before `formatStateUsing()` ever sees it. To read
+  the real array (e.g. `activity_logs.meta`), use `->getStateUsing(fn ($record) => ...)`
+  instead, as `ActivityRelationManager` does.
 
 ## Architecture
 
@@ -85,6 +116,7 @@ never stored.
 
 ## Not yet built (later milestones)
 
-ZIP "Download Selected" for Radcal files (M2), Filament `/admin` (M2), Brevo
-transport wiring (M2), `exchanges:purge` scheduled command (M3), chunked/resumable
-uploads for 100–500 MB files (M3), full CSP/HSTS (M3).
+ZIP "Download Selected" for Radcal files (M2), Brevo domain authentication so
+mail doesn't land in spam (M2 — see the DNS notes above), `exchanges:purge`
+scheduled command (M3), chunked/resumable uploads for 100–500 MB files (M3),
+full CSP/HSTS (M3).

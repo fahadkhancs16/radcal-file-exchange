@@ -31,4 +31,24 @@ enum ActivityAction: string
     {
         return in_array($this, [self::FileAdded, self::FileReplaced], true);
     }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::ExchangeCreated => 'Exchange created',
+            self::ExchangeViewed => 'Exchange viewed',
+            self::ExchangeDisabled => 'Exchange disabled',
+            self::ExchangeDeleted => 'Exchange deleted',
+            self::CustomerInfoChanged => 'Customer info changed',
+            self::PasswordChanged => 'Password changed',
+            self::MaxFileSizeChanged => 'Size limit changed',
+            self::ExpirationChanged => 'Expiration changed',
+            self::FileAdded => 'File added',
+            self::FileReplaced => 'File replaced',
+            self::FileDeleted => 'File deleted',
+            self::FileDownloaded => 'File downloaded',
+            self::VerificationRequested => 'Verification code requested',
+            self::VerificationConfirmed => 'Verification confirmed',
+        };
+    }
 }
