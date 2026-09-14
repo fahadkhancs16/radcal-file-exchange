@@ -4,7 +4,7 @@
 Thank you, {{ $exchange->customer_name }}. Your upload created a secure File Exchange.
 
 **Reference number:** {{ $exchange->code }}
-**Password:** {{ $password }}
+**Password:** `{{ $password }}`
 
 Use the button below to return to the exchange while it stays active. You can add more files, replace a file by uploading one with the same name, or remove files you uploaded. You will not need to verify your email again.
 

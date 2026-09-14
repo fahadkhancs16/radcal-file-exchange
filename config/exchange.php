@@ -48,6 +48,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Auto-generated exchange password
+    |--------------------------------------------------------------------------
+    | Used for customer-initiated exchanges (see App\Support\PasswordGenerator).
+    | Always mixes upper/lowercase letters, digits and symbols.
+    */
+    'password' => [
+        'length' => (int) env('EXCHANGE_PASSWORD_LENGTH', 12),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Email verification (Send Files to Radcal)
     |--------------------------------------------------------------------------
     */

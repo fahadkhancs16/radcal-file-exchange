@@ -7,6 +7,7 @@ use App\Enums\ExchangeOrigin;
 use App\Models\Exchange;
 use App\Models\User;
 use App\Support\ExchangeCode;
+use App\Support\PasswordGenerator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -172,19 +173,6 @@ class ExchangeService
 
     private function generatePassword(): string
     {
-        // Readable but strong: 4 groups of 4 from an unambiguous alphabet.
-        $alphabet = (string) config('exchange.code_alphabet');
-        $max = strlen($alphabet) - 1;
-        $groups = [];
-
-        for ($g = 0; $g < 4; $g++) {
-            $chunk = '';
-            for ($i = 0; $i < 4; $i++) {
-                $chunk .= $alphabet[random_int(0, $max)];
-            }
-            $groups[] = $chunk;
-        }
-
-        return implode('-', $groups);
+        return PasswordGenerator::generate();
     }
 }

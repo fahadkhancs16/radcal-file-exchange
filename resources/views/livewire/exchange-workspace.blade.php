@@ -149,16 +149,28 @@
                     <div class="card-head"><h2>Add files</h2></div>
                     <div class="card-body">
                         <div class="dropzone-outer"
-                             x-data="{ over: false }"
+                             x-data="{
+                                 over: false,
+                                 handleDrop(e) {
+                                     this.over = false;
+                                     if (! e.dataTransfer || e.dataTransfer.files.length === 0) return;
+                                     // Forward the dropped files to the real file input ourselves —
+                                     // preventDefault() on `drop` (needed to stop the browser from
+                                     // navigating to the file) also cancels the input's own native
+                                     // drop-to-select behaviour, so nothing would reach Livewire otherwise.
+                                     this.$refs.uploadsInput.files = e.dataTransfer.files;
+                                     this.$refs.uploadsInput.dispatchEvent(new Event('change', { bubbles: true }));
+                                 },
+                             }"
                              x-on:dragover.prevent="over = true"
                              x-on:dragleave.prevent="over = false"
-                             x-on:drop.prevent="over = false">
+                             x-on:drop.prevent="handleDrop($event)">
                             <div class="dropzone" :class="{ 'is-over': over }">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                 <p class="dz-title">Drop files here or click to browse</p>
                                 <p class="dz-hint">Up to {{ number_format($exchange->max_file_size / 1048576) }} MB per file. Same filename replaces an existing file.</p>
                             </div>
-                            <input type="file" wire:model="uploads" multiple>
+                            <input type="file" wire:model="uploads" multiple x-ref="uploadsInput">
                         </div>
 
                         <div wire:loading wire:target="uploads" class="dz-hint" style="margin-top:.7rem">
