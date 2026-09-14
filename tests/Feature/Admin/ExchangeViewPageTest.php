@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ActivityAction;
+use App\Enums\ExchangeStatus;
 use App\Enums\FileOwner;
 use App\Filament\Resources\ExchangeResource;
 use App\Filament\Resources\ExchangeResource\Pages\ViewExchange;
@@ -62,11 +63,21 @@ it('resets the password', function () {
     ]);
 });
 
-it('changes the per-file size limit', function () {
+it('changes the per-file size limit without touching the expiration date', function () {
+    // Regression: exchanges.expires_at was a NOT NULL TIMESTAMP column, which
+    // MySQL/MariaDB silently gives an implicit `ON UPDATE CURRENT_TIMESTAMP`
+    // unless told otherwise. That reset expiration to "now" on *any* update to
+    // the row, including one that only touches max_file_size. Fixed by moving
+    // the domain timestamp columns to DATETIME (2026_09_15_000001 migration).
+    $before = $this->exchange->expires_at;
+
     Livewire::test(ViewExchange::class, ['record' => $this->exchange->code])
         ->callAction('changeMaxFileSize', data: ['max_file_size_mb' => 500]);
 
-    expect($this->exchange->fresh()->max_file_size)->toBe(500 * 1024 * 1024);
+    $fresh = $this->exchange->fresh();
+    expect($fresh->max_file_size)->toBe(500 * 1024 * 1024)
+        ->and($fresh->expires_at->equalTo($before))->toBeTrue()
+        ->and($fresh->status())->toBe(ExchangeStatus::Active);
 });
 
 it('sets an explicit expiration date', function () {

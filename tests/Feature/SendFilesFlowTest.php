@@ -74,3 +74,17 @@ it('locks the verification after five wrong attempts', function () {
 it('sends the customer straight to the start page when there is no pending verification', function () {
     $this->get('/send/verify')->assertRedirect(route('send.start'));
 });
+
+it('does not expire the verification code after a single wrong attempt', function () {
+    // Regression: email_verifications.expires_at was a NOT NULL TIMESTAMP
+    // column, which MySQL/MariaDB silently auto-updates to "now" on *any*
+    // update to the row — including the increment('attempts') a wrong guess
+    // triggers. One typo would have made a still-valid code look expired.
+    $this->post('/send', startSend());
+
+    $this->post('/send/verify', ['code' => '000000']);
+
+    $verification = EmailVerification::sole();
+    expect($verification->isExpired())->toBeFalse()
+        ->and($verification->expires_at->isFuture())->toBeTrue();
+});
