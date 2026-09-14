@@ -18,12 +18,12 @@ return [
     |--------------------------------------------------------------------------
     | File size limits (bytes)
     |--------------------------------------------------------------------------
-    | "default_max_bytes" is the per-file ceiling for a new exchange (spec §15:
-    | 100 MB). An administrator may raise an individual exchange's limit up to
-    | "max_allowed_bytes", which also bounds what the PHP/web-server config
-    | must accept.
+    | "default_max_bytes" is the per-file ceiling for a new exchange (200 MB,
+    | raised from the spec §15 example of 100 MB). An administrator may raise
+    | an individual exchange's limit up to "max_allowed_bytes", which also
+    | bounds what the PHP/web-server config must accept.
     */
-    'default_max_bytes' => (int) env('EXCHANGE_DEFAULT_MAX_BYTES', 100 * 1024 * 1024),
+    'default_max_bytes' => (int) env('EXCHANGE_DEFAULT_MAX_BYTES', 200 * 1024 * 1024),
     'max_allowed_bytes' => (int) env('EXCHANGE_MAX_ALLOWED_BYTES', 2 * 1024 * 1024 * 1024),
 
     /*

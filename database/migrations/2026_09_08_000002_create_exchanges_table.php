@@ -24,7 +24,7 @@ return new class extends Migration
 
             $table->string('origin', 32); // App\Enums\ExchangeOrigin
 
-            // Per-file ceiling in bytes. Default 100 MB (config('exchange.default_max_bytes')).
+            // Per-file ceiling in bytes. Default 200 MB (config('exchange.default_max_bytes')).
             $table->unsignedBigInteger('max_file_size');
 
             // Radcal staff member who created it. Null for customer-initiated.
