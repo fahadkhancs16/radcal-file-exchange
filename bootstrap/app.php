@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureAdminManagerSession;
 use App\Http\Middleware\EnsureExchangeSession;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'exchange.session' => EnsureExchangeSession::class,
+            'admin-manager.session' => EnsureAdminManagerSession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

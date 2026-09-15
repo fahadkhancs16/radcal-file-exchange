@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [MainPageController::class, 'show'])->name('home');
 
+require __DIR__.'/admin-manager.php';
+
 /*
 | Send Files to Radcal — customer-initiated transfer (spec §3)
 */
