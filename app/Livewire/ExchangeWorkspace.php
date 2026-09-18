@@ -6,6 +6,7 @@ use App\Enums\FileOwner;
 use App\Exceptions\FileUploadException;
 use App\Models\Exchange;
 use App\Services\FileService;
+use App\Services\UploadNotificationService;
 use App\Support\ExchangeSession;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Response;
@@ -84,18 +85,17 @@ class ExchangeWorkspace extends Component
      * WithFileUploads trait reserves those for the temp-upload machinery, so
      * a wire:click on them is silently swallowed.
      */
-    public function saveUploads(FileService $files): void
+    public function saveUploads(FileService $files, UploadNotificationService $notifications): void
     {
         $this->validate();
 
-        $stored = 0;
+        $stored = collect();
         $rejected = [];
 
         foreach ($this->uploads as $upload) {
             try {
                 // TemporaryUploadedFile extends UploadedFile — FileService takes it as-is.
-                $files->store($this->exchange, FileOwner::Customer, $upload);
-                $stored++;
+                $stored->push($files->store($this->exchange, FileOwner::Customer, $upload));
             } catch (FileUploadException $e) {
                 $rejected[] = $e->getMessage();
             }
@@ -104,8 +104,10 @@ class ExchangeWorkspace extends Component
         $this->reset('uploads');
         $this->exchange->refresh();
 
-        if ($stored > 0) {
-            $this->dispatch('notify', message: $stored.' file'.($stored === 1 ? '' : 's').' uploaded.');
+        if ($stored->isNotEmpty()) {
+            $count = $stored->count();
+            $this->dispatch('notify', message: $count.' file'.($count === 1 ? '' : 's').' uploaded.');
+            $notifications->notifyStaffOfCustomerUpload($this->exchange, $stored);
         }
 
         foreach ($rejected as $message) {

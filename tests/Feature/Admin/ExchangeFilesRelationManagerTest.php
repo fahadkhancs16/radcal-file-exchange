@@ -4,11 +4,13 @@ use App\Enums\FileOwner;
 use App\Filament\Resources\ExchangeResource\Pages\ViewExchange;
 use App\Filament\Resources\ExchangeResource\RelationManagers\CustomerFilesRelationManager;
 use App\Filament\Resources\ExchangeResource\RelationManagers\RadcalFilesRelationManager;
+use App\Mail\RadcalFilesAddedMail;
 use App\Models\Exchange;
 use App\Models\User;
 use App\Services\FileService;
 use Filament\Facades\Filament;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
@@ -46,6 +48,33 @@ it('uploads a file to the customer side', function () {
         ]);
 
     expect($this->exchange->customerFiles()->sole()->original_filename)->toBe('reply.pdf');
+});
+
+it('emails the customer when Radcal uploads a file', function () {
+    Mail::fake();
+
+    Livewire::test(RadcalFilesRelationManager::class, [
+        'ownerRecord' => $this->exchange,
+        'pageClass' => ViewExchange::class,
+    ])->callTableAction('upload', data: [
+        'files' => [UploadedFile::fake()->create('calibration.pdf', 50)],
+    ]);
+
+    Mail::assertSent(RadcalFilesAddedMail::class, fn ($mail) => $mail->hasTo($this->exchange->email)
+        && $mail->files->pluck('original_filename')->contains('calibration.pdf'));
+});
+
+it('does not email the customer when an admin uploads into the customer bucket on their behalf', function () {
+    Mail::fake();
+
+    Livewire::test(CustomerFilesRelationManager::class, [
+        'ownerRecord' => $this->exchange,
+        'pageClass' => ViewExchange::class,
+    ])->callTableAction('upload', data: [
+        'files' => [UploadedFile::fake()->create('reply.pdf', 20)],
+    ]);
+
+    Mail::assertNothingSent();
 });
 
 it('rejects an upload over the exchange limit with a notification, not a crash', function () {

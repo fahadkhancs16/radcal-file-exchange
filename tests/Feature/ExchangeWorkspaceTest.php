@@ -2,10 +2,13 @@
 
 use App\Enums\FileOwner;
 use App\Livewire\ExchangeWorkspace;
+use App\Mail\CustomerFilesUploadedMail;
 use App\Models\Exchange;
+use App\Models\User;
 use App\Services\FileService;
 use App\Support\ExchangeSession;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
@@ -28,6 +31,29 @@ it('lets a customer upload a file', function () {
         ->assertHasNoErrors();
 
     expect($this->exchange->customerFiles()->count())->toBe(1);
+});
+
+it('emails staff when a customer uploads a file', function () {
+    Mail::fake();
+    $staff = User::factory()->create(['is_admin' => true]);
+    config(['exchange.notifications.staff_email' => null]);
+
+    Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
+        ->set('uploads', [UploadedFile::fake()->create('traces.zip', 100)])
+        ->call('saveUploads');
+
+    Mail::assertSent(CustomerFilesUploadedMail::class, fn ($mail) => $mail->hasTo($staff->email)
+        && $mail->files->pluck('original_filename')->contains('traces.zip'));
+});
+
+it('does not email staff when every upload is rejected', function () {
+    Mail::fake();
+
+    Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
+        ->set('uploads', [UploadedFile::fake()->create('huge.bin', 4096)])
+        ->call('saveUploads');
+
+    Mail::assertNothingSent();
 });
 
 it('shows an error when an upload is too large', function () {

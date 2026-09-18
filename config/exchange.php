@@ -77,4 +77,18 @@ return [
     */
     'expiring_soon_days' => (int) env('EXCHANGE_EXPIRING_SOON_DAYS', 2),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Upload notifications
+    |--------------------------------------------------------------------------
+    | "staff_email" is who hears about a customer's upload — a comma-separated
+    | list, e.g. "ops@radcal.com,jane@radcal.com". Leave blank to notify every
+    | user with is_admin=true instead of a fixed address. The customer side
+    | (Radcal added a file) always goes to the exchange's own email — no
+    | config needed there.
+    */
+    'notifications' => [
+        'staff_email' => env('EXCHANGE_STAFF_NOTIFICATION_EMAIL'),
+    ],
+
 ];

@@ -7,6 +7,7 @@ use App\Exceptions\FileUploadException;
 use App\Models\Exchange;
 use App\Models\ExchangeFile;
 use App\Services\FileService;
+use App\Services\UploadNotificationService;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -101,22 +102,28 @@ abstract class BaseExchangeFilesRelationManager extends RelationManager
                 $exchange = $this->exchange();
                 $files = app(FileService::class);
 
-                $stored = 0;
+                $stored = collect();
                 $errors = [];
 
                 foreach ($data['files'] as $upload) {
                     try {
-                        $files->store($exchange, static::owner(), $upload, auth()->user());
-                        $stored++;
+                        $stored->push($files->store($exchange, static::owner(), $upload, auth()->user()));
                     } catch (FileUploadException $e) {
                         $errors[] = $e->getMessage();
                     }
                 }
 
-                if ($stored > 0) {
+                if ($stored->isNotEmpty()) {
                     Notification::make()->success()
-                        ->title($stored.' file'.($stored === 1 ? '' : 's').' uploaded')
+                        ->title($stored->count().' file'.($stored->count() === 1 ? '' : 's').' uploaded')
                         ->send();
+
+                    // Only files Radcal actually sent to the customer are worth
+                    // an email — an admin uploading into the customer's own
+                    // bucket on their behalf isn't "Radcal sent you something".
+                    if (static::owner() === FileOwner::Radcal) {
+                        app(UploadNotificationService::class)->notifyCustomerOfRadcalUpload($exchange, $stored);
+                    }
                 }
 
                 foreach ($errors as $message) {
