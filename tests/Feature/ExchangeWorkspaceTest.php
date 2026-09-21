@@ -46,6 +46,19 @@ it('emails staff when a customer uploads a file', function () {
         && $mail->files->pluck('original_filename')->contains('traces.zip'));
 });
 
+it('includes the customer explanation in the staff email and resets it after sending', function () {
+    Mail::fake();
+    User::factory()->create(['is_admin' => true]);
+
+    $component = Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
+        ->set('uploads', [UploadedFile::fake()->create('traces.zip', 100)])
+        ->set('explanation', 'Here are the calibration traces you asked for.')
+        ->call('saveUploads');
+
+    Mail::assertSent(CustomerFilesUploadedMail::class, fn ($mail) => $mail->explanation === 'Here are the calibration traces you asked for.');
+    $component->assertSet('explanation', '');
+});
+
 it('does not email staff when every upload is rejected', function () {
     Mail::fake();
 

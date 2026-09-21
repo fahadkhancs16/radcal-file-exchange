@@ -190,6 +190,13 @@
                                     </li>
                                 @endforeach
                             </ul>
+
+                            <div class="field" style="margin-top:1rem">
+                                <label for="explanation">Explanation <span class="hint">(optional, included in the email to Radcal)</span></label>
+                                <textarea id="explanation" wire:model="explanation" rows="3" placeholder="What are these files for?"></textarea>
+                                @error('explanation') <p class="error-text">{{ $message }}</p> @enderror
+                            </div>
+
                             <div class="actions">
                                 <button type="button" class="btn" wire:click="saveUploads"
                                         wire:loading.attr="disabled" wire:target="saveUploads">

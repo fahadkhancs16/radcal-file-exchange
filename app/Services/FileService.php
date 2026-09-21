@@ -42,6 +42,7 @@ class FileService
         FileOwner $owner,
         UploadedFile $upload,
         ?User $uploadedBy = null,
+        ?string $note = null,
     ): ExchangeFile {
         $name = Filename::clean($upload->getClientOriginalName());
         $size = (int) $upload->getSize();
@@ -56,7 +57,7 @@ class FileService
 
         $existing = $this->findByName($exchange, $owner, $name);
 
-        return DB::transaction(function () use ($exchange, $owner, $upload, $uploadedBy, $name, $size, $existing) {
+        return DB::transaction(function () use ($exchange, $owner, $upload, $uploadedBy, $note, $name, $size, $existing) {
             $storedName = $existing !== null ? $existing->stored_name : Filename::storedName($name);
 
             $this->disk()->putFileAs($exchange->storageDirectory(), $upload, $storedName);
@@ -81,11 +82,12 @@ class FileService
                 $action = ActivityAction::FileAdded;
             }
 
-            $this->activity->record($exchange, $action, [
+            $this->activity->record($exchange, $action, array_filter([
                 'filename' => $name,
                 'owner' => $owner->value,
                 'size' => $size,
-            ]);
+                'note' => filled($note) ? $note : null,
+            ]));
 
             $this->expiration->bumpForFileActivity($exchange);
 

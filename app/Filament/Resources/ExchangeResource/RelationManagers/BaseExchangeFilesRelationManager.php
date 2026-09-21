@@ -97,17 +97,22 @@ abstract class BaseExchangeFilesRelationManager extends RelationManager
                     ->required()
                     ->storeFiles(false)
                     ->helperText(fn () => 'Up to '.number_format($this->exchange()->max_file_size / 1048576).' MB per file. Same filename replaces an existing file.'),
+                Forms\Components\Textarea::make('note')
+                    ->label('Explanation')
+                    ->helperText('Optional. Included in the notification email.')
+                    ->rows(3),
             ])
             ->action(function (array $data) {
                 $exchange = $this->exchange();
                 $files = app(FileService::class);
+                $note = filled($data['note'] ?? null) ? $data['note'] : null;
 
                 $stored = collect();
                 $errors = [];
 
                 foreach ($data['files'] as $upload) {
                     try {
-                        $stored->push($files->store($exchange, static::owner(), $upload, auth()->user()));
+                        $stored->push($files->store($exchange, static::owner(), $upload, auth()->user(), $note));
                     } catch (FileUploadException $e) {
                         $errors[] = $e->getMessage();
                     }
@@ -122,7 +127,7 @@ abstract class BaseExchangeFilesRelationManager extends RelationManager
                     // an email — an admin uploading into the customer's own
                     // bucket on their behalf isn't "Radcal sent you something".
                     if (static::owner() === FileOwner::Radcal) {
-                        app(UploadNotificationService::class)->notifyCustomerOfRadcalUpload($exchange, $stored);
+                        app(UploadNotificationService::class)->notifyCustomerOfRadcalUpload($exchange, $stored, $note);
                     }
                 }
 

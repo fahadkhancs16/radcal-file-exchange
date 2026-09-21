@@ -64,6 +64,20 @@ it('emails the customer when Radcal uploads a file', function () {
         && $mail->files->pluck('original_filename')->contains('calibration.pdf'));
 });
 
+it('includes the admin explanation in the customer email', function () {
+    Mail::fake();
+
+    Livewire::test(RadcalFilesRelationManager::class, [
+        'ownerRecord' => $this->exchange,
+        'pageClass' => ViewExchange::class,
+    ])->callTableAction('upload', data: [
+        'files' => [UploadedFile::fake()->create('calibration.pdf', 50)],
+        'note' => 'Updated calibration results attached.',
+    ]);
+
+    Mail::assertSent(RadcalFilesAddedMail::class, fn ($mail) => $mail->explanation === 'Updated calibration results attached.');
+});
+
 it('does not email the customer when an admin uploads into the customer bucket on their behalf', function () {
     Mail::fake();
 

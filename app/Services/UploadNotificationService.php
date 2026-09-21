@@ -18,25 +18,25 @@ use Illuminate\Support\Facades\Mail;
 class UploadNotificationService
 {
     /** @param  Collection<int, ExchangeFile>  $files */
-    public function notifyStaffOfCustomerUpload(Exchange $exchange, Collection $files): void
+    public function notifyStaffOfCustomerUpload(Exchange $exchange, Collection $files, ?string $explanation = null): void
     {
         if ($files->isEmpty()) {
             return;
         }
 
         foreach ($this->staffRecipients() as $email) {
-            Mail::to($email)->send(new CustomerFilesUploadedMail($exchange, $files));
+            Mail::to($email)->send(new CustomerFilesUploadedMail($exchange, $files, $explanation));
         }
     }
 
     /** @param  Collection<int, ExchangeFile>  $files */
-    public function notifyCustomerOfRadcalUpload(Exchange $exchange, Collection $files): void
+    public function notifyCustomerOfRadcalUpload(Exchange $exchange, Collection $files, ?string $explanation = null): void
     {
         if ($files->isEmpty()) {
             return;
         }
 
-        Mail::to($exchange->email)->send(new RadcalFilesAddedMail($exchange, $files));
+        Mail::to($exchange->email)->send(new RadcalFilesAddedMail($exchange, $files, $explanation));
     }
 
     /** @return array<int, string> */

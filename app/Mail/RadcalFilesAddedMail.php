@@ -21,6 +21,7 @@ class RadcalFilesAddedMail extends RadcalMailable
     public function __construct(
         public Exchange $exchange,
         public Collection $files,
+        public ?string $explanation = null,
     ) {}
 
     public function envelope(): Envelope

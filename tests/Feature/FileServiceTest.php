@@ -62,3 +62,18 @@ it('will not let a delete cross over to radcal files', function () {
     expect($deleted)->toBe(0)
         ->and($this->exchange->files()->count())->toBe(1);
 });
+
+it('records a note in the activity log when one is given', function () {
+    $this->files->store($this->exchange, FileOwner::Customer, UploadedFile::fake()->create('traces.zip', 10), note: 'For the Q3 audit.');
+
+    $this->assertDatabaseHas('activity_logs', ['action' => ActivityAction::FileAdded->value]);
+    $log = $this->exchange->activity()->first();
+    expect($log->meta['note'])->toBe('For the Q3 audit.');
+});
+
+it('omits the note key from the activity log when none is given', function () {
+    $this->files->store($this->exchange, FileOwner::Customer, UploadedFile::fake()->create('traces.zip', 10));
+
+    $log = $this->exchange->activity()->first();
+    expect($log->meta)->not->toHaveKey('note');
+});

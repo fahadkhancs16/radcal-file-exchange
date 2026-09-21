@@ -8,6 +8,13 @@
 - {{ $file->original_filename }} ({{ $file->humanSize() }})
 @endforeach
 
+@if (filled($explanation))
+<x-mail::panel>
+**Note from Radcal:**
+{{ $explanation }}
+</x-mail::panel>
+
+@endif
 <x-mail::button :url="route('exchange.landing', $exchange)">
 Open your File Exchange
 </x-mail::button>

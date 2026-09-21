@@ -48,3 +48,14 @@ it('falls back to every admin user when no staff email is configured', function 
     Mail::assertSent(CustomerFilesUploadedMail::class, fn ($mail) => $mail->hasTo($admin1->email));
     Mail::assertSent(CustomerFilesUploadedMail::class, fn ($mail) => $mail->hasTo($admin2->email));
 });
+
+it('passes the explanation through to the staff mailable', function () {
+    config(['exchange.notifications.staff_email' => 'ops@radcal.com']);
+
+    $exchange = Exchange::factory()->create();
+    $file = ExchangeFile::factory()->for($exchange)->create(['owner' => FileOwner::Customer]);
+
+    app(UploadNotificationService::class)->notifyStaffOfCustomerUpload($exchange, collect([$file]), 'Please review before Friday.');
+
+    Mail::assertSent(CustomerFilesUploadedMail::class, fn ($mail) => $mail->explanation === 'Please review before Friday.');
+});

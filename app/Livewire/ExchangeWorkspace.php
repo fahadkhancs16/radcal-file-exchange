@@ -37,6 +37,8 @@ class ExchangeWorkspace extends Component
     /** @var array<int, TemporaryUploadedFile> */
     public array $uploads = [];
 
+    public string $explanation = '';
+
     /** @var array<int, int|string> */
     public array $selected = [];
 
@@ -75,6 +77,7 @@ class ExchangeWorkspace extends Component
         return [
             'uploads' => ['array'],
             'uploads.*' => ['file'],
+            'explanation' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
@@ -92,10 +95,12 @@ class ExchangeWorkspace extends Component
         $stored = collect();
         $rejected = [];
 
+        $explanation = trim($this->explanation) ?: null;
+
         foreach ($this->uploads as $upload) {
             try {
                 // TemporaryUploadedFile extends UploadedFile — FileService takes it as-is.
-                $stored->push($files->store($this->exchange, FileOwner::Customer, $upload));
+                $stored->push($files->store($this->exchange, FileOwner::Customer, $upload, note: $explanation));
             } catch (FileUploadException $e) {
                 $rejected[] = $e->getMessage();
             }
@@ -107,7 +112,8 @@ class ExchangeWorkspace extends Component
         if ($stored->isNotEmpty()) {
             $count = $stored->count();
             $this->dispatch('notify', message: $count.' file'.($count === 1 ? '' : 's').' uploaded.');
-            $notifications->notifyStaffOfCustomerUpload($this->exchange, $stored);
+            $notifications->notifyStaffOfCustomerUpload($this->exchange, $stored, $explanation);
+            $this->reset('explanation');
         }
 
         foreach ($rejected as $message) {
