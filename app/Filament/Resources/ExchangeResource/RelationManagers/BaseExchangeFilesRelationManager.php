@@ -99,13 +99,14 @@ abstract class BaseExchangeFilesRelationManager extends RelationManager
                     ->helperText(fn () => 'Up to '.number_format($this->exchange()->max_file_size / 1048576).' MB per file. Same filename replaces an existing file.'),
                 Forms\Components\Textarea::make('note')
                     ->label('Explanation')
-                    ->helperText('Optional. Included in the notification email.')
+                    ->required()
+                    ->helperText('Included in the notification email.')
                     ->rows(3),
             ])
             ->action(function (array $data) {
                 $exchange = $this->exchange();
                 $files = app(FileService::class);
-                $note = filled($data['note'] ?? null) ? $data['note'] : null;
+                $note = $data['note'];
 
                 $stored = collect();
                 $errors = [];

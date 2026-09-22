@@ -30,12 +30,27 @@ it('uploads a file to the Radcal side and attributes it to the admin', function 
     ])
         ->callTableAction('upload', data: [
             'files' => [UploadedFile::fake()->create('calibration.pdf', 50)],
+            'note' => 'Calibration results for the requested unit.',
         ])
         ->assertHasNoTableActionErrors();
 
     $file = $this->exchange->radcalFiles()->sole();
     expect($file->original_filename)->toBe('calibration.pdf')
         ->and($file->uploaded_by)->toBe($this->admin->id);
+});
+
+it('requires an explanation before uploading', function () {
+    Livewire::test(RadcalFilesRelationManager::class, [
+        'ownerRecord' => $this->exchange,
+        'pageClass' => ViewExchange::class,
+    ])
+        ->callTableAction('upload', data: [
+            'files' => [UploadedFile::fake()->create('calibration.pdf', 50)],
+            'note' => '',
+        ])
+        ->assertHasTableActionErrors(['note']);
+
+    expect($this->exchange->radcalFiles()->count())->toBe(0);
 });
 
 it('uploads a file to the customer side', function () {
@@ -45,6 +60,7 @@ it('uploads a file to the customer side', function () {
     ])
         ->callTableAction('upload', data: [
             'files' => [UploadedFile::fake()->create('reply.pdf', 20)],
+            'note' => 'Filed on the customer side per their request.',
         ]);
 
     expect($this->exchange->customerFiles()->sole()->original_filename)->toBe('reply.pdf');
@@ -58,6 +74,7 @@ it('emails the customer when Radcal uploads a file', function () {
         'pageClass' => ViewExchange::class,
     ])->callTableAction('upload', data: [
         'files' => [UploadedFile::fake()->create('calibration.pdf', 50)],
+        'note' => 'Calibration results for the requested unit.',
     ]);
 
     Mail::assertSent(RadcalFilesAddedMail::class, fn ($mail) => $mail->hasTo($this->exchange->email)
@@ -86,6 +103,7 @@ it('does not email the customer when an admin uploads into the customer bucket o
         'pageClass' => ViewExchange::class,
     ])->callTableAction('upload', data: [
         'files' => [UploadedFile::fake()->create('reply.pdf', 20)],
+        'note' => 'Filed on the customer side per their request.',
     ]);
 
     Mail::assertNothingSent();
@@ -98,6 +116,7 @@ it('rejects an upload over the exchange limit with a notification, not a crash',
     ])
         ->callTableAction('upload', data: [
             'files' => [UploadedFile::fake()->create('huge.bin', 4096)],
+            'note' => 'Testing the size limit.',
         ]);
 
     expect($this->exchange->radcalFiles()->count())->toBe(0);

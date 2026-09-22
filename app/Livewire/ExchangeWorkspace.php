@@ -77,7 +77,7 @@ class ExchangeWorkspace extends Component
         return [
             'uploads' => ['array'],
             'uploads.*' => ['file'],
-            'explanation' => ['nullable', 'string', 'max:2000'],
+            'explanation' => ['required', 'string', 'max:2000'],
         ];
     }
 
