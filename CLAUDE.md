@@ -90,6 +90,7 @@ admin panel (Filament, M2) share one code path for every rule.
 - `FileService` — store, replace-by-filename, delete, download logging; enforces the per-exchange size limit
 - `ExpirationService` — the 14-day clock; **only** file add/replace resets it (see `tests/Unit/ExpirationServiceTest.php` — that test is the spec contract)
 - `VerificationService` — 6-digit email codes for "Send Files to Radcal"
+- `ColleagueService` — a customer invites colleagues into their exchange (`exchange_members`, own emailed password). Customers send files person-to-person (`FileOwner::Colleague`; `uploaded_by_email` = sender, `recipient_email` = recipient), visible only to those two and to admins (read-only `ColleagueFilesRelationManager`). `Exchange::authenticate()` resolves either password to the signed-in email
 - `ActivityRecorder` — writes `activity_logs`; resolves the actor (admin / customer / system)
 
 ### Key rules baked in

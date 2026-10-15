@@ -70,6 +70,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Invited colleagues
+    |--------------------------------------------------------------------------
+    | How many colleagues a customer may invite into one exchange. Each gets
+    | their own emailed password and the same rights as the customer.
+    */
+    'max_colleagues' => (int) env('EXCHANGE_MAX_COLLEAGUES', 10),
+
+    /*
+    |--------------------------------------------------------------------------
     | Warn-before-expiry window (days)
     |--------------------------------------------------------------------------
     | Exchanges expiring within this many days are surfaced by the

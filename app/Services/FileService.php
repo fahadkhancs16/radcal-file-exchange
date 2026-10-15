@@ -43,6 +43,9 @@ class FileService
         UploadedFile $upload,
         ?User $uploadedBy = null,
         ?string $note = null,
+        ?string $uploadedByEmail = null,
+        ?string $recipientEmail = null,
+        ?int $recipientExchangeId = null,
     ): ExchangeFile {
         $name = Filename::clean($upload->getClientOriginalName());
         $size = (int) $upload->getSize();
@@ -55,9 +58,9 @@ class FileService
             throw FileUploadException::tooLarge($name, $exchange->max_file_size);
         }
 
-        $existing = $this->findByName($exchange, $owner, $name);
+        $existing = $this->findByName($exchange, $owner, $name, $uploadedByEmail, $recipientEmail, $recipientExchangeId);
 
-        return DB::transaction(function () use ($exchange, $owner, $upload, $uploadedBy, $note, $name, $size, $existing) {
+        return DB::transaction(function () use ($exchange, $owner, $upload, $uploadedBy, $uploadedByEmail, $recipientEmail, $recipientExchangeId, $note, $name, $size, $existing) {
             $storedName = $existing !== null ? $existing->stored_name : Filename::storedName($name);
 
             $this->disk()->putFileAs($exchange->storageDirectory(), $upload, $storedName);
@@ -68,6 +71,9 @@ class FileService
                 'size' => $size,
                 'mime' => $upload->getMimeType() ?: null,
                 'uploaded_by' => $uploadedBy?->getKey(),
+                'uploaded_by_email' => $uploadedByEmail,
+                'recipient_email' => $recipientEmail,
+                'recipient_exchange_id' => $recipientExchangeId,
             ];
 
             if ($existing !== null) {
@@ -86,6 +92,8 @@ class FileService
                 'filename' => $name,
                 'owner' => $owner->value,
                 'size' => $size,
+                'uploaded_by_email' => $uploadedByEmail,
+                'recipient' => $recipientEmail,
                 'note' => filled($note) ? $note : null,
             ]));
 
@@ -102,11 +110,12 @@ class FileService
      * @param  array<int>  $fileIds
      * @return int number of files deleted
      */
-    public function deleteSelected(Exchange $exchange, FileOwner $owner, array $fileIds): int
+    public function deleteSelected(Exchange $exchange, FileOwner $owner, array $fileIds, ?string $onlyUploadedBy = null): int
     {
         $files = $exchange->files()
             ->where('owner', $owner->value)
             ->whereIn('id', $fileIds)
+            ->when($onlyUploadedBy !== null, fn ($q) => $q->where('uploaded_by_email', mb_strtolower($onlyUploadedBy)))
             ->get();
 
         foreach ($files as $file) {
@@ -139,12 +148,13 @@ class FileService
         }
     }
 
-    private function findByName(Exchange $exchange, FileOwner $owner, string $name): ?ExchangeFile
+    private function findByName(Exchange $exchange, FileOwner $owner, string $name, ?string $sender = null, ?string $recipient = null, ?int $recipientExchangeId = null): ?ExchangeFile
     {
         $key = Filename::comparisonKey($name);
 
         return $exchange->files()
             ->where('owner', $owner->value)
+            ->when($recipient !== null, fn ($q) => $q->where('uploaded_by_email', $sender)->where('recipient_email', $recipient)->where('recipient_exchange_id', $recipientExchangeId))
             ->whereRaw('LOWER(original_filename) = ?', [$key])
             ->first();
     }

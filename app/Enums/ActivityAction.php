@@ -18,6 +18,9 @@ enum ActivityAction: string
     case MaxFileSizeChanged = 'exchange.max_file_size_changed';
     case ExpirationChanged = 'exchange.expiration_changed';
 
+    case ColleagueInvited = 'colleague.invited';
+    case ColleagueRemoved = 'colleague.removed';
+
     case FileAdded = 'file.added';
     case FileReplaced = 'file.replaced';
     case FileDeleted = 'file.deleted';
@@ -43,6 +46,8 @@ enum ActivityAction: string
             self::PasswordChanged => 'Password changed',
             self::MaxFileSizeChanged => 'Size limit changed',
             self::ExpirationChanged => 'Expiration changed',
+            self::ColleagueInvited => 'Colleague invited',
+            self::ColleagueRemoved => 'Colleague removed',
             self::FileAdded => 'File added',
             self::FileReplaced => 'File replaced',
             self::FileDeleted => 'File deleted',

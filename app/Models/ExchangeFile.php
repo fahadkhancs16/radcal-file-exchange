@@ -20,6 +20,9 @@ use Illuminate\Support\Carbon;
  * @property int $size
  * @property string|null $mime
  * @property int|null $uploaded_by
+ * @property string|null $uploaded_by_email
+ * @property string|null $recipient_email
+ * @property int|null $recipient_exchange_id
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
@@ -36,6 +39,9 @@ class ExchangeFile extends Model
         'size',
         'mime',
         'uploaded_by',
+        'uploaded_by_email',
+        'recipient_email',
+        'recipient_exchange_id',
     ];
 
     protected function casts(): array
@@ -56,6 +62,28 @@ class ExchangeFile extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    /**
+     * Colleague transfers one person sent (from their own exchange) or
+     * received (addressed to them in the exchange they signed in to).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<ExchangeFile>  $query
+     */
+    public function scopeInvolving($query, int $exchangeId, string $email): void
+    {
+        $email = mb_strtolower($email);
+
+        $query->where('owner', FileOwner::Colleague->value)
+            ->where(fn ($q) => $q
+                ->where(fn ($sent) => $sent->where('exchange_id', $exchangeId)->where('uploaded_by_email', $email))
+                ->orWhere(fn ($got) => $got->where('recipient_exchange_id', $exchangeId)->where('recipient_email', $email)));
+    }
+
+    /** @return BelongsTo<Exchange, $this> */
+    public function recipientExchange(): BelongsTo
+    {
+        return $this->belongsTo(Exchange::class, 'recipient_exchange_id');
     }
 
     public function isCustomerOwned(): bool
