@@ -56,7 +56,7 @@ class ActivityRelationManager extends RelationManager
                     // A plain make('meta') would have Filament auto-implode the cast
                     // array into a comma-joined string before we ever see it — pull
                     // the raw, properly cast attribute ourselves instead.
-                    ->getStateUsing(fn (ActivityLog $record) => $record->meta['filename'] ?? $record->meta['reason'] ?? $record->meta['email'] ?? null)
+                    ->getStateUsing(fn (ActivityLog $record) => $record->meta['filename'] ?? $record->meta['reason'] ?? null)
                     ->placeholder('—')
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('ip_address')

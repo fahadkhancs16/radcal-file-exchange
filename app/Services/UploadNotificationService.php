@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Mail\ColleagueFilesSharedMail;
 use App\Mail\CustomerFilesUploadedMail;
+use App\Mail\FileSharedMail;
 use App\Mail\RadcalFilesAddedMail;
 use App\Models\Exchange;
 use App\Models\ExchangeFile;
@@ -41,17 +41,19 @@ class UploadNotificationService
     }
 
     /**
-     * Tell a colleague that someone on the customer side sent them files.
+     * Email a recipient the public link to each of the customer's files.
+     * Unlike the staff/customer notices this is what the customer asked for,
+     * so a failure is thrown for the caller to report.
      *
      * @param  Collection<int, ExchangeFile>  $files
      */
-    public function notifyColleagueOfFiles(Exchange $exchange, Collection $files, string $senderEmail, string $recipientEmail, ?string $explanation = null, ?Exchange $recipientExchange = null): void
+    public function shareLinksWithRecipient(Exchange $exchange, Collection $files, string $recipientEmail, ?string $explanation = null): void
     {
         if ($files->isEmpty()) {
             return;
         }
 
-        Mail::to($recipientEmail)->send(new ColleagueFilesSharedMail($exchange, $files, $senderEmail, $explanation, $recipientExchange));
+        Mail::to($recipientEmail)->send(new FileSharedMail($exchange, $files, $explanation));
     }
 
     /** @return array<int, string> */

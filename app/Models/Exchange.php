@@ -108,18 +108,6 @@ class Exchange extends Model
         return $this->files()->where('owner', FileOwner::Customer->value);
     }
 
-    /** @return HasMany<ExchangeMember, $this> */
-    public function members(): HasMany
-    {
-        return $this->hasMany(ExchangeMember::class);
-    }
-
-    /** @return HasMany<ExchangeFile, $this> */
-    public function colleagueFiles(): HasMany
-    {
-        return $this->files()->where('owner', FileOwner::Colleague->value);
-    }
-
     /** @return BelongsTo<User, $this> */
     public function creator(): BelongsTo
     {
@@ -177,26 +165,6 @@ class Exchange extends Model
         }
 
         return true;
-    }
-
-    /**
-     * Resolve a password to the customer-side identity it unlocks: the
-     * exchange contact's email for the exchange password, or an invited
-     * colleague's own email for theirs. Null when nothing matches.
-     */
-    public function authenticate(string $plain): ?string
-    {
-        if ($this->checkPassword($plain)) {
-            return $this->email;
-        }
-
-        foreach ($this->members as $member) {
-            if ($member->checkPassword($plain)) {
-                return $member->email;
-            }
-        }
-
-        return null;
     }
 
     // ---------------------------------------------------------------------

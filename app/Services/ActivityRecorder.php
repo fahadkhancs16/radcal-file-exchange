@@ -20,6 +20,8 @@ class ActivityRecorder
 
     private string $systemLabel = 'System';
 
+    private bool $linkRecipient = false;
+
     public function __construct(private readonly Request $request) {}
 
     public function actingAsSystem(string $label = 'System'): self
@@ -27,6 +29,15 @@ class ActivityRecorder
         $clone = clone $this;
         $clone->forceSystem = true;
         $clone->systemLabel = $label;
+
+        return $clone;
+    }
+
+    /** Someone who opened a public share link — no session, not a user. */
+    public function actingAsLinkRecipient(): self
+    {
+        $clone = clone $this;
+        $clone->linkRecipient = true;
 
         return $clone;
     }
@@ -58,6 +69,10 @@ class ActivityRecorder
     {
         if ($this->forceSystem) {
             return [ActorType::System, null, $this->systemLabel];
+        }
+
+        if ($this->linkRecipient) {
+            return [ActorType::Customer, null, 'Link recipient'];
         }
 
         $user = Auth::user();

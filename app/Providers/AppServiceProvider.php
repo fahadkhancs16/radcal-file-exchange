@@ -33,6 +33,15 @@ class AppServiceProvider extends ServiceProvider
         // handled in VerificationService. These HTTP limiters are only an
         // abuse backstop, and are lifted outside production so local testing
         // never hits a bare 429 page.
+        // Public file links: a backstop against token guessing / scraping.
+        RateLimiter::for('share-link', function (Request $request) {
+            if (! $this->app->isProduction()) {
+                return Limit::none();
+            }
+
+            return Limit::perMinute(60)->by($request->ip());
+        });
+
         RateLimiter::for('verification-send', function (Request $request) {
             if (! $this->app->isProduction()) {
                 return Limit::none();

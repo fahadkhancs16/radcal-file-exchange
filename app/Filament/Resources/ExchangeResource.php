@@ -6,7 +6,6 @@ use App\Enums\ExchangeOrigin;
 use App\Enums\ExchangeStatus;
 use App\Filament\Resources\ExchangeResource\Pages;
 use App\Filament\Resources\ExchangeResource\RelationManagers\ActivityRelationManager;
-use App\Filament\Resources\ExchangeResource\RelationManagers\ColleagueFilesRelationManager;
 use App\Filament\Resources\ExchangeResource\RelationManagers\CustomerFilesRelationManager;
 use App\Filament\Resources\ExchangeResource\RelationManagers\RadcalFilesRelationManager;
 use App\Models\Exchange;
@@ -190,7 +189,6 @@ class ExchangeResource extends Resource
         return [
             RadcalFilesRelationManager::class,
             CustomerFilesRelationManager::class,
-            ColleagueFilesRelationManager::class,
             ActivityRelationManager::class,
         ];
     }

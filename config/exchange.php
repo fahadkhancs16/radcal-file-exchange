@@ -70,12 +70,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Invited colleagues
+    | Emailed download links
     |--------------------------------------------------------------------------
-    | How many colleagues a customer may invite into one exchange. Each gets
-    | their own emailed password and the same rights as the customer.
+    | A customer may type a recipient's email when uploading; Radcal then mails
+    | that person a public link to each file. This caps how many such emails one
+    | exchange can send per hour, so the feature cannot be used to spam strangers.
     */
-    'max_colleagues' => (int) env('EXCHANGE_MAX_COLLEAGUES', 10),
+    'share' => [
+        'hourly_email_limit' => (int) env('EXCHANGE_SHARE_EMAILS_PER_HOUR', 20),
+    ],
 
     /*
     |--------------------------------------------------------------------------

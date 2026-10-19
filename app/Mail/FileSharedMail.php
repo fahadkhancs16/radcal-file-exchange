@@ -11,9 +11,10 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
 
 /**
- * To the other customer-side people in an exchange: a colleague uploaded file(s).
+ * To whoever a customer typed into "send a download link": the file(s), each
+ * with its public view/download link. Sent by Radcal on the customer's behalf.
  */
-class ColleagueFilesSharedMail extends RadcalMailable
+class FileSharedMail extends RadcalMailable
 {
     use Queueable, SerializesModels;
 
@@ -21,27 +22,21 @@ class ColleagueFilesSharedMail extends RadcalMailable
     public function __construct(
         public Exchange $exchange,
         public Collection $files,
-        public string $sender,
         public ?string $explanation = null,
-        public ?Exchange $recipientExchange = null,
     ) {}
 
     public function envelope(): Envelope
     {
+        $count = $this->files->count();
+
         return new Envelope(
-            subject: "{$this->sender} shared files with you — reference {$this->reference()}",
+            subject: "{$this->exchange->customer_name} shared ".($count === 1 ? 'a file' : "{$count} files").' with you',
             replyTo: $this->configuredReplyTo(),
         );
     }
 
-    /** The code the recipient knows the exchange by (their own, if they are in another one). */
-    public function reference(): string
-    {
-        return ($this->recipientExchange ?? $this->exchange)->code;
-    }
-
     public function content(): Content
     {
-        return new Content(markdown: 'mail.colleague-files-shared');
+        return new Content(markdown: 'mail.file-shared');
     }
 }

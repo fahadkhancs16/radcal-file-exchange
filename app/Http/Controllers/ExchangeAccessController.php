@@ -65,13 +65,7 @@ class ExchangeAccessController extends Controller
 
         $exchange = Exchange::query()->where('code', $code)->first();
 
-        // The exchange password or an invited colleague's own password both work;
-        // either way a failure is identical (never reveals which part was wrong).
-        $identity = ($exchange !== null && $exchange->isReachable())
-            ? $exchange->authenticate($password)
-            : null;
-
-        if ($exchange === null || $identity === null) {
+        if ($exchange === null || ! $exchange->isReachable() || ! $exchange->checkPassword($password)) {
             RateLimiter::hit($key, 60);
 
             throw ValidationException::withMessages([
@@ -80,7 +74,7 @@ class ExchangeAccessController extends Controller
         }
 
         RateLimiter::clear($key);
-        $this->session->grant($exchange, $identity);
+        $this->session->grant($exchange);
 
         return redirect()->route('exchange.workspace', $exchange);
     }

@@ -13,7 +13,11 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Add / replace / delete files within an exchange, enforcing the per-exchange
@@ -43,9 +47,6 @@ class FileService
         UploadedFile $upload,
         ?User $uploadedBy = null,
         ?string $note = null,
-        ?string $uploadedByEmail = null,
-        ?string $recipientEmail = null,
-        ?int $recipientExchangeId = null,
     ): ExchangeFile {
         $name = Filename::clean($upload->getClientOriginalName());
         $size = (int) $upload->getSize();
@@ -58,9 +59,9 @@ class FileService
             throw FileUploadException::tooLarge($name, $exchange->max_file_size);
         }
 
-        $existing = $this->findByName($exchange, $owner, $name, $uploadedByEmail, $recipientEmail, $recipientExchangeId);
+        $existing = $this->findByName($exchange, $owner, $name);
 
-        return DB::transaction(function () use ($exchange, $owner, $upload, $uploadedBy, $uploadedByEmail, $recipientEmail, $recipientExchangeId, $note, $name, $size, $existing) {
+        return DB::transaction(function () use ($exchange, $owner, $upload, $uploadedBy, $note, $name, $size, $existing) {
             $storedName = $existing !== null ? $existing->stored_name : Filename::storedName($name);
 
             $this->disk()->putFileAs($exchange->storageDirectory(), $upload, $storedName);
@@ -71,18 +72,20 @@ class FileService
                 'size' => $size,
                 'mime' => $upload->getMimeType() ?: null,
                 'uploaded_by' => $uploadedBy?->getKey(),
-                'uploaded_by_email' => $uploadedByEmail,
-                'recipient_email' => $recipientEmail,
-                'recipient_exchange_id' => $recipientExchangeId,
             ];
 
             if ($existing !== null) {
+                if ($owner === FileOwner::Customer && $existing->share_token === null) {
+                    $attributes['share_token'] = ExchangeFile::newToken();
+                }
+
                 $existing->update($attributes);
                 $file = $existing;
                 $action = ActivityAction::FileReplaced;
             } else {
                 $file = $exchange->files()->create([
                     'owner' => $owner,
+                    'share_token' => $owner === FileOwner::Customer ? ExchangeFile::newToken() : null,
                     ...$attributes,
                 ]);
                 $action = ActivityAction::FileAdded;
@@ -92,8 +95,6 @@ class FileService
                 'filename' => $name,
                 'owner' => $owner->value,
                 'size' => $size,
-                'uploaded_by_email' => $uploadedByEmail,
-                'recipient' => $recipientEmail,
                 'note' => filled($note) ? $note : null,
             ]));
 
@@ -110,12 +111,11 @@ class FileService
      * @param  array<int>  $fileIds
      * @return int number of files deleted
      */
-    public function deleteSelected(Exchange $exchange, FileOwner $owner, array $fileIds, ?string $onlyUploadedBy = null): int
+    public function deleteSelected(Exchange $exchange, FileOwner $owner, array $fileIds): int
     {
         $files = $exchange->files()
             ->where('owner', $owner->value)
             ->whereIn('id', $fileIds)
-            ->when($onlyUploadedBy !== null, fn ($q) => $q->where('uploaded_by_email', mb_strtolower($onlyUploadedBy)))
             ->get();
 
         foreach ($files as $file) {
@@ -148,13 +148,65 @@ class FileService
         }
     }
 
-    private function findByName(Exchange $exchange, FileOwner $owner, string $name, ?string $sender = null, ?string $recipient = null, ?int $recipientExchangeId = null): ?ExchangeFile
+    /** Log that a customer emailed a download link for these files. */
+    public function recordShared(Exchange $exchange, Collection $files, string $recipientEmail): void
+    {
+        foreach ($files as $file) {
+            $this->activity->record($exchange, ActivityAction::FileShared, [
+                'filename' => $file->original_filename,
+                'recipient' => $recipientEmail,
+            ]);
+        }
+    }
+
+    /** Log a download or inline view through a public share link. Never extends expiration. */
+    public function recordLinkDownload(Exchange $exchange, ExchangeFile $file, bool $inline = false): void
+    {
+        $this->activity->actingAsLinkRecipient()->record($exchange, ActivityAction::FileDownloaded, array_filter([
+            'filename' => $file->original_filename,
+            'owner' => $file->owner->value,
+            'via' => $inline ? 'share link (view)' : 'share link',
+        ]));
+    }
+
+    public function downloadResponse(Exchange $exchange, ExchangeFile $file): StreamedResponse
+    {
+        return Response::streamDownload(
+            fn () => $this->pump($exchange, $file),
+            $file->original_filename,
+            ['Content-Length' => (string) $file->size],
+        );
+    }
+
+    /** Render in the browser; callers must have checked $file->isPreviewable(). */
+    public function inlineResponse(Exchange $exchange, ExchangeFile $file): StreamedResponse
+    {
+        $fallback = str_replace(['%', '/', '\\', '"'], '_', Str::ascii($file->original_filename));
+
+        return Response::stream(fn () => $this->pump($exchange, $file), 200, [
+            'Content-Type' => (string) $file->mime,
+            'Content-Length' => (string) $file->size,
+            'Content-Disposition' => HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_INLINE, $file->original_filename, $fallback),
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    private function pump(Exchange $exchange, ExchangeFile $file): void
+    {
+        $stream = $this->disk()->readStream($exchange->storagePathFor($file->stored_name));
+
+        if (is_resource($stream)) {
+            fpassthru($stream);
+            fclose($stream);
+        }
+    }
+
+    private function findByName(Exchange $exchange, FileOwner $owner, string $name): ?ExchangeFile
     {
         $key = Filename::comparisonKey($name);
 
         return $exchange->files()
             ->where('owner', $owner->value)
-            ->when($recipient !== null, fn ($q) => $q->where('uploaded_by_email', $sender)->where('recipient_email', $recipient)->where('recipient_exchange_id', $recipientExchangeId))
             ->whereRaw('LOWER(original_filename) = ?', [$key])
             ->first();
     }

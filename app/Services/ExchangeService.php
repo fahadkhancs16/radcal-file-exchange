@@ -158,7 +158,6 @@ class ExchangeService
         DB::transaction(function () use ($exchange) {
             $this->deleteStorage($exchange);
             $exchange->files()->delete();
-            $exchange->members()->delete();
             $exchange->forceFill(['purged_at' => now()])->save();
         });
     }
