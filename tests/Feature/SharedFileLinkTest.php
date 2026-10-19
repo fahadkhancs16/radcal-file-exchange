@@ -3,7 +3,6 @@
 use App\Enums\ActivityAction;
 use App\Enums\FileOwner;
 use App\Livewire\ExchangeWorkspace;
-use App\Mail\CustomerFilesUploadedMail;
 use App\Mail\FileSharedMail;
 use App\Models\ActivityLog;
 use App\Models\Exchange;
@@ -51,8 +50,7 @@ it('keeps the same link when a file is replaced by name', function () {
         ->and($second->share_token)->toBe($first->share_token);
 });
 
-it('emails the recipient a link to each uploaded file and still notifies staff', function () {
-    config(['exchange.notifications.staff_email' => 'ops@radcal.com']);
+it('emails the recipient a link to each uploaded file and nobody else', function () {
 
     Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
         ->set('uploads', [UploadedFile::fake()->create('a.pdf', 10), UploadedFile::fake()->create('b.zip', 10)])
@@ -69,7 +67,7 @@ it('emails the recipient a link to each uploaded file and still notifies staff',
             && $mail->explanation === 'Here are the files.'
             && $mail->files->every(fn ($f) => filled($f->share_token));
     });
-    Mail::assertSent(CustomerFilesUploadedMail::class, fn ($m) => $m->hasTo('ops@radcal.com'));
+    Mail::assertSentCount(1);
 
     expect(ActivityLog::where('action', ActivityAction::FileShared->value)->count())->toBe(2);
 });

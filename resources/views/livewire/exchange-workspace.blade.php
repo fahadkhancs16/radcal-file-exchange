@@ -192,7 +192,7 @@
                             </ul>
 
                             <div class="field" style="margin-top:1rem">
-                                <label for="explanation">Explanation <span class="hint">(required, included in the email to Radcal and to the recipient below)</span></label>
+                                <label for="explanation">Explanation <span class="hint">(required, included in the email to the recipient below, if you enter one)</span></label>
                                 <textarea id="explanation" wire:model="explanation" rows="3" placeholder="What are these files for?" required></textarea>
                                 @error('explanation') <p class="error-text">{{ $message }}</p> @enderror
                             </div>

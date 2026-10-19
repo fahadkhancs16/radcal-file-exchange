@@ -119,7 +119,6 @@ class ExchangeWorkspace extends Component
         if ($stored->isNotEmpty()) {
             $count = $stored->count();
             $this->dispatch('notify', message: $count.' file'.($count === 1 ? '' : 's').' uploaded.');
-            $notifications->notifyStaffOfCustomerUpload($this->exchange, $stored, $explanation);
             $this->shareByEmail($stored, $explanation, $files, $notifications);
             $this->reset('explanation', 'recipientEmail');
         }

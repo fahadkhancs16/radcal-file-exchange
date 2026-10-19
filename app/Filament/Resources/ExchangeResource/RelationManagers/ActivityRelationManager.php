@@ -59,6 +59,15 @@ class ActivityRelationManager extends RelationManager
                     ->getStateUsing(fn (ActivityLog $record) => $record->meta['filename'] ?? $record->meta['reason'] ?? null)
                     ->placeholder('—')
                     ->toggleable(),
+                // The customer's upload explanation used to arrive by email; it now
+                // lives only here, so keep it visible to staff.
+                Tables\Columns\TextColumn::make('note')
+                    ->label('Note')
+                    ->getStateUsing(fn (ActivityLog $record) => $record->meta['note'] ?? null)
+                    ->placeholder('—')
+                    ->wrap()
+                    ->limit(120)
+                    ->tooltip(fn (ActivityLog $record) => $record->meta['note'] ?? null),
                 Tables\Columns\TextColumn::make('ip_address')
                     ->label('IP')
                     ->toggleable(isToggledHiddenByDefault: true),

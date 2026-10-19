@@ -2,7 +2,6 @@
 
 use App\Enums\FileOwner;
 use App\Livewire\ExchangeWorkspace;
-use App\Mail\CustomerFilesUploadedMail;
 use App\Models\Exchange;
 use App\Models\User;
 use App\Services\FileService;
@@ -44,30 +43,18 @@ it('requires an explanation before uploading', function () {
     expect($this->exchange->customerFiles()->count())->toBe(0);
 });
 
-it('emails staff when a customer uploads a file', function () {
-    Mail::fake();
-    $staff = User::factory()->create(['is_admin' => true]);
-    config(['exchange.notifications.staff_email' => null]);
-
-    Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
-        ->set('uploads', [UploadedFile::fake()->create('traces.zip', 100)])
-        ->set('explanation', 'These are the traces we discussed.')
-        ->call('saveUploads');
-
-    Mail::assertSent(CustomerFilesUploadedMail::class, fn ($mail) => $mail->hasTo($staff->email)
-        && $mail->files->pluck('original_filename')->contains('traces.zip'));
-});
-
-it('includes the customer explanation in the staff email and resets it after sending', function () {
+it('does not email staff when a customer uploads a file', function () {
     Mail::fake();
     User::factory()->create(['is_admin' => true]);
 
     $component = Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
         ->set('uploads', [UploadedFile::fake()->create('traces.zip', 100)])
-        ->set('explanation', 'Here are the calibration traces you asked for.')
-        ->call('saveUploads');
+        ->set('explanation', 'These are the traces we discussed.')
+        ->call('saveUploads')
+        ->assertHasNoErrors();
 
-    Mail::assertSent(CustomerFilesUploadedMail::class, fn ($mail) => $mail->explanation === 'Here are the calibration traces you asked for.');
+    Mail::assertNothingSent();
+    expect($this->exchange->customerFiles()->count())->toBe(1);
     $component->assertSet('explanation', '');
 });
 
