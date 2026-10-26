@@ -1,4 +1,4 @@
-<x-layouts.app :title="'Files from '.$exchange->customer_name">
+<x-layouts.app :title="'Files from '.$exchange->customer_name" :full="true">
     <h1>Files shared with you</h1>
     <p class="sub">
         {{ $exchange->customer_name }}@if ($exchange->company) ({{ $exchange->company }})@endif

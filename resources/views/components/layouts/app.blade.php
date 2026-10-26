@@ -1,4 +1,4 @@
-@props(['title' => null, 'wide' => false])
+@props(['title' => null, 'wide' => false, 'full' => false])
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,7 +18,7 @@
         <img src="{{ asset('images/logo-iba-radcal.png') }}" alt="iba Radcal">
     </a>
 
-    <div class="auth-inner {{ $wide ? 'lg' : '' }}">
+    <div class="auth-inner {{ $wide ? 'lg' : '' }} {{ $full ? 'xl' : '' }}">
         @if (session('status'))
             <div class="alert success">{{ session('status') }}</div>
         @endif
