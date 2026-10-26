@@ -70,18 +70,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Emailed download links
-    |--------------------------------------------------------------------------
-    | A customer may type a recipient's email when uploading; Radcal then mails
-    | that person a public link to each file. This caps how many such emails one
-    | exchange can send per hour, so the feature cannot be used to spam strangers.
-    */
-    'share' => [
-        'hourly_email_limit' => (int) env('EXCHANGE_SHARE_EMAILS_PER_HOUR', 20),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Warn-before-expiry window (days)
     |--------------------------------------------------------------------------
     | Exchanges expiring within this many days are surfaced by the

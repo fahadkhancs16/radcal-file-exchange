@@ -6,12 +6,8 @@ use App\Enums\FileOwner;
 use App\Exceptions\FileUploadException;
 use App\Models\Exchange;
 use App\Services\FileService;
-use App\Services\UploadNotificationService;
 use App\Support\ExchangeSession;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Response;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -41,9 +37,6 @@ class ExchangeWorkspace extends Component
     public array $uploads = [];
 
     public string $explanation = '';
-
-    /** Optional: email a public download link for the uploaded files to this address. */
-    public string $recipientEmail = '';
 
     /** @var array<int, int|string> */
     public array $selected = [];
@@ -84,7 +77,6 @@ class ExchangeWorkspace extends Component
             'uploads' => ['array'],
             'uploads.*' => ['file'],
             'explanation' => ['required', 'string', 'max:2000'],
-            'recipientEmail' => ['nullable', 'email:rfc', 'max:190'],
         ];
     }
 
@@ -95,7 +87,7 @@ class ExchangeWorkspace extends Component
      * WithFileUploads trait reserves those for the temp-upload machinery, so
      * a wire:click on them is silently swallowed.
      */
-    public function saveUploads(FileService $files, UploadNotificationService $notifications): void
+    public function saveUploads(FileService $files): void
     {
         $this->validate();
 
@@ -119,50 +111,12 @@ class ExchangeWorkspace extends Component
         if ($stored->isNotEmpty()) {
             $count = $stored->count();
             $this->dispatch('notify', message: $count.' file'.($count === 1 ? '' : 's').' uploaded.');
-            $this->shareByEmail($stored, $explanation, $files, $notifications);
-            $this->reset('explanation', 'recipientEmail');
+            $this->reset('explanation');
         }
 
         foreach ($rejected as $message) {
             $this->addError('uploads', $message);
         }
-    }
-
-    /**
-     * Email the public download links to the recipient the customer typed.
-     * The files are already stored, so a problem here is reported but never
-     * undoes the upload.
-     *
-     * @param  Collection<int, \App\Models\ExchangeFile>  $stored
-     */
-    private function shareByEmail(Collection $stored, ?string $explanation, FileService $files, UploadNotificationService $notifications): void
-    {
-        $email = trim($this->recipientEmail);
-
-        if ($email === '') {
-            return;
-        }
-
-        $key = 'share-email:'.$this->exchange->getKey();
-
-        if (RateLimiter::tooManyAttempts($key, (int) config('exchange.share.hourly_email_limit'))) {
-            $this->dispatch('notify', message: 'Files uploaded, but too many link emails were sent recently. Try again later.');
-
-            return;
-        }
-
-        try {
-            $notifications->shareLinksWithRecipient($this->exchange, $stored, $email, $explanation);
-        } catch (\Throwable $e) {
-            Log::error('Share-link email failed', ['exchange' => $this->exchange->code, 'error' => $e->getMessage()]);
-            $this->dispatch('notify', message: 'Files uploaded, but we could not email the link. Use "Copy link" instead.');
-
-            return;
-        }
-
-        RateLimiter::hit($key, 3600);
-        $files->recordShared($this->exchange, $stored, $email);
-        $this->dispatch('notify', message: 'Download link emailed to '.$email.'.');
     }
 
     public function deleteSelected(FileService $files): void

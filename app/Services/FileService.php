@@ -75,17 +75,12 @@ class FileService
             ];
 
             if ($existing !== null) {
-                if ($owner === FileOwner::Customer && $existing->share_token === null) {
-                    $attributes['share_token'] = ExchangeFile::newToken();
-                }
-
                 $existing->update($attributes);
                 $file = $existing;
                 $action = ActivityAction::FileReplaced;
             } else {
                 $file = $exchange->files()->create([
                     'owner' => $owner,
-                    'share_token' => $owner === FileOwner::Customer ? ExchangeFile::newToken() : null,
                     ...$attributes,
                 ]);
                 $action = ActivityAction::FileAdded;
@@ -144,17 +139,6 @@ class FileService
             $this->activity->record($exchange, ActivityAction::FileDownloaded, [
                 'filename' => $file->original_filename,
                 'owner' => $file->owner->value,
-            ]);
-        }
-    }
-
-    /** Log that a customer emailed a download link for these files. */
-    public function recordShared(Exchange $exchange, Collection $files, string $recipientEmail): void
-    {
-        foreach ($files as $file) {
-            $this->activity->record($exchange, ActivityAction::FileShared, [
-                'filename' => $file->original_filename,
-                'recipient' => $recipientEmail,
             ]);
         }
     }

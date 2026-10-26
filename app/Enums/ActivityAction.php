@@ -22,6 +22,7 @@ enum ActivityAction: string
     case FileReplaced = 'file.replaced';
     case FileDeleted = 'file.deleted';
     case FileDownloaded = 'file.downloaded';
+    /** No longer written; kept so old activity rows (link emailed to a recipient) still render. */
     case FileShared = 'file.shared';
 
     case VerificationRequested = 'verification.requested';

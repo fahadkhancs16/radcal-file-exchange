@@ -20,7 +20,6 @@ use Illuminate\Support\Str;
  * @property string $stored_name
  * @property int $size
  * @property string|null $mime
- * @property string|null $share_token
  * @property int|null $uploaded_by
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -37,7 +36,6 @@ class ExchangeFile extends Model
         'stored_name',
         'size',
         'mime',
-        'share_token',
         'uploaded_by',
     ];
 
@@ -59,12 +57,6 @@ class ExchangeFile extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
-    }
-
-    /** An unguessable token for the public share link (/share/{token}). */
-    public static function newToken(): string
-    {
-        return Str::random(40);
     }
 
     /** Types that are safe to render inline from our own origin (no HTML/SVG/scripts). */

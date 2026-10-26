@@ -14,12 +14,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 /**
  * A single temporary two-way workspace between Radcal and one customer.
  *
  * @property int $id
  * @property string $code
+ * @property string|null $share_token
  * @property string $customer_name
  * @property string|null $company
  * @property string $email
@@ -38,6 +40,7 @@ class Exchange extends Model
 
     protected $fillable = [
         'code',
+        'share_token',
         'password_hash',
         'customer_name',
         'company',
@@ -72,6 +75,9 @@ class Exchange extends Model
             if (blank($exchange->code)) {
                 $exchange->code = ExchangeCode::generate();
             }
+            if (blank($exchange->share_token)) {
+                $exchange->share_token = static::newShareToken();
+            }
             if (blank($exchange->max_file_size)) {
                 $exchange->max_file_size = (int) config('exchange.default_max_bytes');
             }
@@ -79,6 +85,12 @@ class Exchange extends Model
                 $exchange->expires_at = now()->addDays((int) config('exchange.lifetime_days'));
             }
         });
+    }
+
+    /** An unguessable token for the exchange's public share link (/share/{token}). */
+    public static function newShareToken(): string
+    {
+        return Str::random(40);
     }
 
     public function getRouteKeyName(): string

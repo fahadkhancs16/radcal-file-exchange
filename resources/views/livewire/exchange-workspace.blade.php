@@ -192,16 +192,9 @@
                             </ul>
 
                             <div class="field" style="margin-top:1rem">
-                                <label for="explanation">Explanation <span class="hint">(required, included in the email to the recipient below, if you enter one)</span></label>
+                                <label for="explanation">Explanation <span class="hint">(required, Radcal sees this note with your upload)</span></label>
                                 <textarea id="explanation" wire:model="explanation" rows="3" placeholder="What are these files for?" required></textarea>
                                 @error('explanation') <p class="error-text">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div class="field">
-                                <label for="recipientEmail">Send a download link to <span class="hint">(optional email address)</span></label>
-                                <input id="recipientEmail" type="email" wire:model="recipientEmail" placeholder="name@company.com" autocomplete="off">
-                                <p class="dz-hint">We email this person a page where they can view and download these files. Anyone with the link can open them, until the exchange expires.</p>
-                                @error('recipientEmail') <p class="error-text">{{ $message }}</p> @enderror
                             </div>
 
                             <div class="actions">
@@ -229,6 +222,41 @@
                             </button>
                         @endif
                     </div>
+                    @if ($customerFiles->isNotEmpty())
+                        <div class="card-body"
+                             x-data="{
+                                 url: @js(route('share.show', $exchange->share_token)),
+                                 copied: false,
+                                 copy() {
+                                     const done = () => {
+                                         this.copied = true;
+                                         this.$dispatch('notify', { message: 'Link copied to clipboard.' });
+                                         setTimeout(() => this.copied = false, 2000);
+                                     };
+                                     if (navigator.clipboard && window.isSecureContext) {
+                                         navigator.clipboard.writeText(this.url).then(done);
+                                         return;
+                                     }
+                                     // Plain-HTTP fallback: the async clipboard API needs a secure context.
+                                     const box = document.createElement('textarea');
+                                     box.value = this.url;
+                                     box.style.position = 'fixed';
+                                     box.style.opacity = '0';
+                                     document.body.appendChild(box);
+                                     box.select();
+                                     try { document.execCommand('copy'); done(); } finally { box.remove(); }
+                                 },
+                             }">
+                            <label for="shareLink">Link to your uploaded files</label>
+                            <div style="display:flex;gap:.5rem;align-items:center">
+                                <input id="shareLink" type="text" readonly x-model="url" x-on:focus="$event.target.select()" style="flex:1;min-width:0">
+                                <button type="button" class="btn secondary sm" x-on:click="copy()">
+                                    <span x-text="copied ? 'Copied!' : 'Copy link'">Copy link</span>
+                                </button>
+                            </div>
+                            <p class="dz-hint">Share this link anywhere. Anyone who opens it can see and download all the files listed below, without a password, until {{ $exchange->expires_at->format('F j, Y') }}.</p>
+                        </div>
+                    @endif
                     <div class="table-wrap">
                         <table class="files">
                             <thead><tr><th class="check"></th><th>Name</th><th>Size</th><th class="right">Uploaded</th><th class="right"></th></tr></thead>
@@ -242,38 +270,10 @@
                                     </span></td>
                                     <td class="size">{{ $file->humanSize() }}</td>
                                     <td class="size right">{{ $file->created_at->diffForHumans() }}</td>
-                                    <td class="right"
-                                        x-data="{
-                                            url: @js(route('share.show', $file->share_token)),
-                                            copied: false,
-                                            copy() {
-                                                const done = () => {
-                                                    this.copied = true;
-                                                    this.$dispatch('notify', { message: 'Link copied to clipboard.' });
-                                                    setTimeout(() => this.copied = false, 2000);
-                                                };
-                                                if (navigator.clipboard && window.isSecureContext) {
-                                                    navigator.clipboard.writeText(this.url).then(done);
-                                                    return;
-                                                }
-                                                // Plain-HTTP fallback: the async clipboard API needs a secure context.
-                                                const box = document.createElement('textarea');
-                                                box.value = this.url;
-                                                box.style.position = 'fixed';
-                                                box.style.opacity = '0';
-                                                document.body.appendChild(box);
-                                                box.select();
-                                                try { document.execCommand('copy'); done(); } finally { box.remove(); }
-                                            },
-                                        }">
-                                        <span style="display:inline-flex;gap:.4rem">
-                                            <button type="button" class="btn secondary sm" wire:click="downloadCustomerFile({{ $file->id }})">
-                                                Download
-                                            </button>
-                                            <button type="button" class="btn secondary sm" x-on:click="copy()">
-                                                <span x-text="copied ? 'Copied!' : 'Copy link'">Copy link</span>
-                                            </button>
-                                        </span>
+                                    <td class="right">
+                                        <button type="button" class="btn secondary sm" wire:click="downloadCustomerFile({{ $file->id }})">
+                                            Download
+                                        </button>
                                     </td>
                                 </tr>
                             @empty

@@ -3,7 +3,7 @@
 use App\Http\Controllers\ExchangeAccessController;
 use App\Http\Controllers\MainPageController;
 use App\Http\Controllers\SendFilesController;
-use App\Http\Controllers\SharedFileController;
+use App\Http\Controllers\SharedExchangeController;
 use App\Livewire\ExchangeWorkspace;
 use Illuminate\Support\Facades\Route;
 
@@ -12,13 +12,14 @@ Route::get('/', [MainPageController::class, 'show'])->name('home');
 require __DIR__.'/admin-manager.php';
 
 /*
-| Public file links — a customer's emailed / copied "download link".
-| Token-gated, no password; see SharedFileController.
+| Public exchange link — the page a customer copies or emails so others can
+| view and download the files they uploaded to their exchange.
+| Token-gated, no password; see SharedExchangeController.
 */
 Route::prefix('share/{token}')->whereAlphaNumeric('token')->middleware('throttle:share-link')->name('share.')->group(function () {
-    Route::get('/', [SharedFileController::class, 'show'])->name('show');
-    Route::get('/view', [SharedFileController::class, 'view'])->name('view');
-    Route::get('/download', [SharedFileController::class, 'download'])->name('download');
+    Route::get('/', [SharedExchangeController::class, 'show'])->name('show');
+    Route::get('/files/{file}/view', [SharedExchangeController::class, 'view'])->whereNumber('file')->name('view');
+    Route::get('/files/{file}/download', [SharedExchangeController::class, 'download'])->whereNumber('file')->name('download');
 });
 
 /*
