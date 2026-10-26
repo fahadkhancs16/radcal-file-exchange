@@ -69,7 +69,8 @@ h1, h2, h3 { color: var(--ink); letter-spacing: -.01em; }
 
 .auth-inner { width: 100%; max-width: 27rem; }
 .auth-inner.lg { max-width: 34rem; }
-.auth-inner.xl { max-width: 64rem; }
+/* Full-width pages (shared files list): fill the screen, side padding comes from .auth. */
+.auth-inner.xl { max-width: none; }
 
 .auth h1 { font-size: 1.5rem; margin: 0 0 .35rem; text-wrap: balance; }
 .auth .sub { color: var(--ink-2); margin: 0 0 1.5rem; }
