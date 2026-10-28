@@ -4,10 +4,12 @@ namespace App\Livewire;
 
 use App\Enums\FileOwner;
 use App\Exceptions\FileUploadException;
+use App\Mail\ExchangeReadyMail;
 use App\Models\Exchange;
 use App\Services\FileService;
 use App\Support\ExchangeSession;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Response;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -25,6 +27,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ExchangeWorkspace extends Component
 {
     use WithFileUploads;
+
+    /** Session key holding the not-yet-sent reference/password email (set by SendFilesController). */
+    public const READY_MAIL_SESSION_KEY = 'exchange.ready_mail';
 
     public Exchange $exchange;
 
@@ -130,11 +135,34 @@ class ExchangeWorkspace extends Component
             $count = $stored->count();
             $this->dispatch('notify', message: $count.' file'.($count === 1 ? '' : 's').' uploaded.');
             $this->reset('explanation');
+            $this->sendReadyMailOnce();
         }
 
         foreach ($rejected as $message) {
             $this->addError('uploads', $message);
         }
+    }
+
+    /**
+     * Customer-initiated exchanges get their reference number + password email
+     * after the first successful upload, not at verification. pull() makes it
+     * fire exactly once.
+     */
+    private function sendReadyMailOnce(): void
+    {
+        $pending = session(self::READY_MAIL_SESSION_KEY);
+
+        if (! is_array($pending) || ($pending['exchange_id'] ?? null) !== $this->exchange->id) {
+            return;
+        }
+
+        session()->forget(self::READY_MAIL_SESSION_KEY);
+
+        Mail::to($this->exchange->email)->send(new ExchangeReadyMail(
+            $this->exchange,
+            (string) $pending['password'],
+            route('exchange.landing', $this->exchange),
+        ));
     }
 
     public function deleteSelected(FileService $files): void

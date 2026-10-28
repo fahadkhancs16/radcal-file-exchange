@@ -74,7 +74,7 @@
             @if ($firstVisit)
                 <div class="alert success">
                     Your files reached Radcal. Your reference number is <strong>{{ $exchange->code }}</strong> —
-                    we emailed a link and password so you can return to this exchange later.
+                    we'll email you a link and password to return to this exchange once your first file is uploaded.
                 </div>
             @endif
 

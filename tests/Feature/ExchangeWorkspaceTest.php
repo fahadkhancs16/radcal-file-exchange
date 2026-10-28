@@ -116,3 +116,31 @@ it('downloads a radcal file without extending expiration', function () {
 
     expect($this->exchange->fresh()->expires_at->toDateString())->toBe(now()->addDays(3)->toDateString());
 });
+
+it('sends the reference and password email only after the first successful upload', function () {
+    Mail::fake();
+    session([ExchangeWorkspace::READY_MAIL_SESSION_KEY => [
+        'exchange_id' => $this->exchange->id,
+        'password' => 'generated-pass',
+    ]]);
+
+    $component = Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code]);
+
+    // Nothing sent just by opening the workspace.
+    Mail::assertNotSent(\App\Mail\ExchangeReadyMail::class);
+
+    $component
+        ->set('uploads', [UploadedFile::fake()->create('traces.zip', 100)])
+        ->set('explanation', 'Traces.')
+        ->call('saveUploads');
+
+    Mail::assertSent(\App\Mail\ExchangeReadyMail::class, 1);
+
+    $component
+        ->set('uploads', [UploadedFile::fake()->create('more.zip', 100)])
+        ->set('explanation', 'More.')
+        ->call('saveUploads');
+
+    // Exactly once.
+    Mail::assertSent(\App\Mail\ExchangeReadyMail::class, 1);
+});

@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\ExchangeWorkspace;
 use App\Mail\ExchangeReadyMail;
 use App\Mail\VerificationCodeMail;
 use App\Models\EmailVerification;
@@ -50,7 +51,9 @@ it('creates an exchange, mails the link, and opens the workspace on a correct co
     $response->assertRedirect(route('exchange.workspace', $exchange));
     expect($exchange->origin->value)->toBe('customer_initiated')
         ->and($exchange->customer_name)->toBe('Marco Feld');
-    Mail::assertSent(ExchangeReadyMail::class);
+    // Held back until the first file upload.
+    Mail::assertNotSent(ExchangeReadyMail::class);
+    expect(session(ExchangeWorkspace::READY_MAIL_SESSION_KEY)['exchange_id'])->toBe($exchange->id);
 });
 
 it('rejects a wrong code and does not create an exchange', function () {

@@ -3,14 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\VerificationException;
-use App\Mail\ExchangeReadyMail;
+use App\Livewire\ExchangeWorkspace;
 use App\Services\ExchangeService;
 use App\Services\VerificationService;
 use App\Support\ExchangeSession;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 
 /**
  * "Send Files to Radcal" — a customer starts a transfer without Radcal
@@ -85,11 +84,13 @@ class SendFilesController extends Controller
             $verification->payload,
         );
 
-        Mail::to($exchange->email)->send(new ExchangeReadyMail(
-            $exchange,
-            $password,
-            route('exchange.landing', $exchange),
-        ));
+        // The reference number + password email is held back until the customer
+        // actually uploads a file (see ExchangeWorkspace::saveUploads()). The
+        // password only exists in plaintext right now, so carry it in the session.
+        $request->session()->put(ExchangeWorkspace::READY_MAIL_SESSION_KEY, [
+            'exchange_id' => $exchange->id,
+            'password' => $password,
+        ]);
 
         $this->exchangeSession->grant($exchange, $exchange->email);
         $request->session()->forget(self::SESSION_PAYLOAD);
