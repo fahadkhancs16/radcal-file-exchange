@@ -36,6 +36,15 @@ class ExchangeWorkspace extends Component
     /** @var array<int, TemporaryUploadedFile> */
     public array $uploads = [];
 
+    /**
+     * Landing slot for the file input. Livewire replaces the bound array on
+     * every selection, so each new batch lands here and is appended to
+     * $uploads in updatedIncoming() — earlier picks are never lost.
+     *
+     * @var array<int, TemporaryUploadedFile>
+     */
+    public array $incoming = [];
+
     public string $explanation = '';
 
     /** @var array<int, int|string> */
@@ -52,6 +61,15 @@ class ExchangeWorkspace extends Component
         if ($this->firstVisit) {
             $this->section = 'uploads';
         }
+    }
+
+    public function updatedIncoming(): void
+    {
+        foreach ($this->incoming as $file) {
+            $this->uploads[] = $file;
+        }
+
+        $this->reset('incoming');
     }
 
     public function showSection(string $section): void

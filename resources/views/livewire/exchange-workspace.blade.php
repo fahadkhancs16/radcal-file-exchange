@@ -170,10 +170,10 @@
                                 <p class="dz-title">Drop files here or click to browse</p>
                                 <p class="dz-hint">Up to {{ number_format($exchange->max_file_size / 1048576) }} MB per file. Same filename replaces an existing file.</p>
                             </div>
-                            <input type="file" wire:model="uploads" multiple x-ref="uploadsInput">
+                            <input type="file" wire:model="incoming" multiple x-ref="uploadsInput">
                         </div>
 
-                        <div wire:loading wire:target="uploads" class="dz-hint" style="margin-top:.7rem">
+                        <div wire:loading wire:target="incoming" class="dz-hint" style="margin-top:.7rem">
                             <svg class="spin" style="width:13px;height:13px;vertical-align:-2px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                             Transferring…
                         </div>
@@ -183,8 +183,8 @@
 
                         @if (count($uploads) > 0)
                             <ul class="pending-list">
-                                @foreach ($uploads as $u)
-                                    <li>
+                                @foreach ($uploads as $i => $u)
+                                    <li wire:key="pending-{{ $i }}-{{ $u->getFilename() }}">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                                         {{ $u->getClientOriginalName() }}
                                     </li>
