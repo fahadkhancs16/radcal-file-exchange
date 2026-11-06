@@ -191,12 +191,6 @@
                                 @endforeach
                             </ul>
 
-                            <div class="field" style="margin-top:1rem">
-                                <label for="explanation">Explanation <span class="hint">(required, Radcal sees this note with your upload)</span></label>
-                                <textarea id="explanation" wire:model="explanation" rows="3" placeholder="What are these files for?" required></textarea>
-                                @error('explanation') <p class="error-text">{{ $message }}</p> @enderror
-                            </div>
-
                             <div class="actions">
                                 <button type="button" class="btn" wire:click="saveUploads"
                                         wire:loading.attr="disabled" wire:target="saveUploads">
@@ -222,7 +216,7 @@
                             </button>
                         @endif
                     </div>
-                    @if ($customerFiles->isNotEmpty())
+                                        @if ($customerFiles->isNotEmpty())
                         <div class="card-body"
                              x-data="{
                                  url: @js(route('share.show', $exchange->share_token)),

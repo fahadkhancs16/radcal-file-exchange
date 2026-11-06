@@ -14,7 +14,7 @@ function startSend(array $overrides = []): array
     return array_merge([
         'customer_name' => 'Marco Feld',
         'company' => 'Feld Medical Physics',
-        'email' => 'marco@example.com',
+        'email' => 'marco@iba-group.com',
         'description' => 'Dose-rate discrepancy traces.',
     ], $overrides);
 }
@@ -24,7 +24,7 @@ it('emails a verification code and stores a hashed pending verification', functi
 
     Mail::assertSent(VerificationCodeMail::class);
     $row = EmailVerification::sole();
-    expect($row->email)->toBe('marco@example.com')
+    expect($row->email)->toBe('marco@iba-group.com')
         ->and($row->code_hash)->not->toBe('')
         ->and($row->payload['customer_name'])->toBe('Marco Feld');
 });
@@ -90,4 +90,12 @@ it('does not expire the verification code after a single wrong attempt', functio
     $verification = EmailVerification::sole();
     expect($verification->isExpired())->toBeFalse()
         ->and($verification->expires_at->isFuture())->toBeTrue();
+});
+
+it('only accepts iba-group.com senders', function () {
+    foreach (['marco@example.com', 'marco@iba-group.com.evil.test', 'marco@sub.iba-group.com'] as $bad) {
+        $this->post('/send', startSend(['email' => $bad]))->assertSessionHasErrors('email');
+    }
+
+    $this->post('/send', startSend(['email' => 'Marco@IBA-Group.com']))->assertSessionHasNoErrors();
 });

@@ -24,23 +24,14 @@ it('blocks the workspace without a session', function () {
 });
 
 it('lets a customer upload a file', function () {
+    Mail::fake();
+
     Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
         ->set('uploads', [UploadedFile::fake()->create('traces.zip', 100)])
-        ->set('explanation', 'These are the traces we discussed.')
         ->call('saveUploads')
         ->assertHasNoErrors();
 
     expect($this->exchange->customerFiles()->count())->toBe(1);
-});
-
-it('requires an explanation before uploading', function () {
-    Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
-        ->set('uploads', [UploadedFile::fake()->create('traces.zip', 100)])
-        ->set('explanation', '')
-        ->call('saveUploads')
-        ->assertHasErrors('explanation');
-
-    expect($this->exchange->customerFiles()->count())->toBe(0);
 });
 
 it('does not email staff when a customer uploads a file', function () {
@@ -49,13 +40,11 @@ it('does not email staff when a customer uploads a file', function () {
 
     $component = Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
         ->set('uploads', [UploadedFile::fake()->create('traces.zip', 100)])
-        ->set('explanation', 'These are the traces we discussed.')
         ->call('saveUploads')
         ->assertHasNoErrors();
 
     Mail::assertNothingSent();
     expect($this->exchange->customerFiles()->count())->toBe(1);
-    $component->assertSet('explanation', '');
 });
 
 it('does not email staff when every upload is rejected', function () {
@@ -63,7 +52,6 @@ it('does not email staff when every upload is rejected', function () {
 
     Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
         ->set('uploads', [UploadedFile::fake()->create('huge.bin', 4096)])
-        ->set('explanation', 'Too big, testing the limit.')
         ->call('saveUploads');
 
     Mail::assertNothingSent();
@@ -72,7 +60,6 @@ it('does not email staff when every upload is rejected', function () {
 it('shows an error when an upload is too large', function () {
     Livewire::test(ExchangeWorkspace::class, ['code' => $this->exchange->code])
         ->set('uploads', [UploadedFile::fake()->create('huge.bin', 4096)])
-        ->set('explanation', 'Too big, testing the limit.')
         ->call('saveUploads')
         ->assertHasErrors('uploads');
 
@@ -131,14 +118,12 @@ it('sends the reference and password email only after the first successful uploa
 
     $component
         ->set('uploads', [UploadedFile::fake()->create('traces.zip', 100)])
-        ->set('explanation', 'Traces.')
         ->call('saveUploads');
 
     Mail::assertSent(\App\Mail\ExchangeReadyMail::class, 1);
 
     $component
         ->set('uploads', [UploadedFile::fake()->create('more.zip', 100)])
-        ->set('explanation', 'More.')
         ->call('saveUploads');
 
     // Exactly once.
