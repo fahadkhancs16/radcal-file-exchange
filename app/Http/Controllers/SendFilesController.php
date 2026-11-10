@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\VerificationException;
 use App\Livewire\ExchangeWorkspace;
-use App\Rules\CompanyEmail;
 use App\Services\ExchangeService;
 use App\Services\VerificationService;
 use App\Support\ExchangeSession;
@@ -37,7 +36,7 @@ class SendFilesController extends Controller
         $data = $request->validate([
             'customer_name' => ['required', 'string', 'max:120'],
             'company' => ['nullable', 'string', 'max:120'],
-            'email' => ['required', 'email:rfc', 'max:190', new CompanyEmail],
+            'email' => ['required', 'email:rfc', 'max:190'],
             'description' => ['nullable', 'string', 'max:2000'],
         ]);
 

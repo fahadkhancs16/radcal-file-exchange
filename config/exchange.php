@@ -28,21 +28,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Allowed email domain
-    |--------------------------------------------------------------------------
-    | Only addresses on this domain may start a "Send Files" transfer.
-    */
-    'allowed_email_domain' => env('EXCHANGE_ALLOWED_EMAIL_DOMAIN', 'iba-group.com'),
-
-    // Extra individual addresses allowed through (comma-separated). For local
-    // testing only — leave empty in staging/production.
-    'allowed_emails' => array_values(array_filter(array_map(
-        'strtolower',
-        array_map('trim', explode(',', (string) env('EXCHANGE_ALLOWED_EMAILS', '')))
-    ))),
-
-    /*
-    |--------------------------------------------------------------------------
     | Lifetime
     |--------------------------------------------------------------------------
     | Normal exchange lifetime in days (spec §15: 14). Adding or replacing a

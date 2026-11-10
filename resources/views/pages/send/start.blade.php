@@ -19,7 +19,7 @@
             </div>
 
             <div class="field">
-                <label for="email">Email address <span class="hint">(must end in &#64;{{ \App\Rules\CompanyEmail::domain() }})</span></label>
+                <label for="email">Email address</label>
                 <input type="email" id="email" name="email" value="{{ old('email') }}" required>
                 @error('email') <p class="error-text">{{ $message }}</p> @enderror
             </div>
