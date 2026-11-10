@@ -91,3 +91,11 @@ it('does not expire the verification code after a single wrong attempt', functio
     expect($verification->isExpired())->toBeFalse()
         ->and($verification->expires_at->isFuture())->toBeTrue();
 });
+
+it('shows special characters in the emailed password exactly once-escaped', function () {
+    $exchange = Exchange::factory()->create();
+    $html = (new ExchangeReadyMail($exchange, '76H!s&!Z7FgK', 'https://example.test'))->render();
+
+    expect($html)->toContain('76H!s&amp;!Z7FgK')
+        ->and($html)->not->toContain('&amp;amp;');
+});
