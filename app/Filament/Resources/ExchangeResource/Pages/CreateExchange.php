@@ -30,9 +30,7 @@ class CreateExchange extends CreateRecord
         try {
             return app(ExchangeService::class)->createByAdmin([
                 'customer_name' => $data['customer_name'],
-                'company' => $data['company'] ?: null,
                 'email' => $data['email'],
-                'description' => $data['description'] ?: null,
                 'code' => $data['code'] ?: null,
                 'password' => $data['password'],
                 'max_file_size' => (int) round(((float) $data['max_file_size_mb']) * 1024 * 1024),

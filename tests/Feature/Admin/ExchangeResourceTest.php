@@ -38,9 +38,7 @@ it('creates an exchange through ExchangeService, not raw Eloquent', function () 
     Livewire::test(CreateExchange::class)
         ->fillForm([
             'customer_name' => 'Marco Feld',
-            'company' => 'Feld Medical Physics',
             'email' => 'marco@example.com',
-            'description' => 'Dose-rate traces',
             'code' => '',
             'password' => 'Sup3r!Secret',
             'max_file_size_mb' => 250,

@@ -13,21 +13,9 @@
             </div>
 
             <div class="field">
-                <label for="company">Company <span class="hint">(optional)</span></label>
-                <input type="text" id="company" name="company" value="{{ old('company') }}">
-                @error('company') <p class="error-text">{{ $message }}</p> @enderror
-            </div>
-
-            <div class="field">
                 <label for="email">Email address</label>
                 <input type="email" id="email" name="email" value="{{ old('email') }}" required>
                 @error('email') <p class="error-text">{{ $message }}</p> @enderror
-            </div>
-
-            <div class="field">
-                <label for="description">What are you sending? <span class="hint">(optional)</span></label>
-                <textarea id="description" name="description">{{ old('description') }}</textarea>
-                @error('description') <p class="error-text">{{ $message }}</p> @enderror
             </div>
 
             <div class="actions">

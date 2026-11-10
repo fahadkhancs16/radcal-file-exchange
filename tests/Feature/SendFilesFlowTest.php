@@ -13,9 +13,7 @@ function startSend(array $overrides = []): array
 {
     return array_merge([
         'customer_name' => 'Marco Feld',
-        'company' => 'Feld Medical Physics',
         'email' => 'marco@example.com',
-        'description' => 'Dose-rate discrepancy traces.',
     ], $overrides);
 }
 

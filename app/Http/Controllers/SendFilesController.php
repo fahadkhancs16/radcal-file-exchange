@@ -35,9 +35,7 @@ class SendFilesController extends Controller
     {
         $data = $request->validate([
             'customer_name' => ['required', 'string', 'max:120'],
-            'company' => ['nullable', 'string', 'max:120'],
             'email' => ['required', 'email:rfc', 'max:190'],
-            'description' => ['nullable', 'string', 'max:2000'],
         ]);
 
         try {

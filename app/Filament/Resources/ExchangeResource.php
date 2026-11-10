@@ -47,16 +47,10 @@ class ExchangeResource extends Resource
                         ->label('Contact name')
                         ->required()
                         ->maxLength(120),
-                    Forms\Components\TextInput::make('company')
-                        ->maxLength(120),
                     Forms\Components\TextInput::make('email')
                         ->email()
                         ->required()
                         ->maxLength(190),
-                    Forms\Components\Textarea::make('description')
-                        ->label('Description')
-                        ->columnSpanFull()
-                        ->rows(2),
                 ]),
 
             Forms\Components\Section::make('Exchange settings')
