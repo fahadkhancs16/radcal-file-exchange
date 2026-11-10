@@ -28,10 +28,6 @@
 
         {{ $slot }}
     </div>
-
-    <p class="auth-foot">
-        Files sent through this system are held temporarily and removed automatically once their exchange expires.
-    </p>
 </div>
 @livewireScripts
 </body>

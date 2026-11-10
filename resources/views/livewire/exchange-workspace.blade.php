@@ -71,12 +71,7 @@
         </header>
 
         <div class="content">
-            @if ($firstVisit)
-                <div class="alert success">
-                    Your files reached Radcal. Your reference number is <strong>{{ $exchange->code }}</strong> —
-                    we'll email you a link and password to return to this exchange once your first file is uploaded.
-                </div>
-            @endif
+            
 
             {{-- ------------------------ Overview ------------------------ --}}
             @if ($section === 'overview')
@@ -87,23 +82,7 @@
                     <div class="stat"><div class="k">Per-file limit</div><div class="v">{{ number_format($exchange->max_file_size / 1048576) }} <small>MB</small></div></div>
                 </div>
 
-                <section class="notice">
-                    <strong>Temporary storage.</strong> This exchange and every file in it are permanently
-                    deleted on {{ $expiresOn }}. Save anything you need to keep before that date — Radcal keeps
-                    nothing here afterwards.
-                </section>
-
-                <section class="card">
-                    <div class="card-head"><h2>What to do next</h2></div>
-                    <div class="card-body">
-                        <ol style="margin:0;padding-left:1.1rem;color:var(--ink-2);display:flex;flex-direction:column;gap:.4rem">
-                            <li>Upload the files you need to send from <strong>Your uploaded files</strong>.</li>
-                            <li>Contact your Radcal representative directly and give them reference
-                                <strong>{{ $exchange->code }}</strong> — uploading does not notify Radcal on its own.</li>
-                            <li>Check <strong>Files from Radcal</strong> for anything sent back to you.</li>
-                        </ol>
-                    </div>
-                </section>
+                
             @endif
 
             {{-- --------------------- Files from Radcal ------------------ --}}
@@ -248,7 +227,7 @@
                                     <span x-text="copied ? 'Copied!' : 'Copy link'">Copy link</span>
                                 </button>
                             </div>
-                            <p class="dz-hint">Share this link anywhere. Anyone who opens it can see and download all the files listed below, without a password, until {{ $exchange->expires_at->format('F j, Y') }}.</p>
+                            
                         </div>
                     @endif
                     <div class="table-wrap">
